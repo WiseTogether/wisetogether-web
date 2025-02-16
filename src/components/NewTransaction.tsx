@@ -3,23 +3,26 @@ import { transaction } from './Transactions';
 import { IoClose } from "react-icons/io5";
 
 interface NewTransactionProps {
-    closeModal: () => void
+    closeModal: () => void,
+    editTransaction: transaction|undefined,
+    modalType: string,
 }
 
-const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal }) => {
+const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransaction, modalType }) => {
 
     const [newTransaction, setNewTransaction] = useState<transaction>({
         date: new Date().toISOString().split('T')[0],
         amount: '',
         category: '-- Select Category --',
         description: undefined,
+        type:'',
     });
 
     const [errors, setErrors] = useState<transaction>({
         date: '',
         amount: '',
         category: '',
-        description: undefined,
+        type:'',
     })
 
     const handleChange = (event:React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) => {
@@ -52,7 +55,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal }) => {
         <div className='fixed inset-0 flex justify-center items-center z-50'>
             <div className='bg-white p-6 rounded-md shadow-lg w-lg'>
                 <div className='mb-6 w-full flex'>
-                    <h2 className='text-emerald-500 text-3xl'>Add Transaction</h2>
+                    <h2 className='text-emerald-500 text-3xl'>{modalType === 'edit' ? 'Edit Transaction' : 'Add Transaction'}</h2>
                     <button 
                         className='text-gray-400 text-2xl bg-gray-100 rounded-full h-fit hover:cursor-pointer hover:bg-gray-200 ml-auto'
                         onClick={closeModal}
