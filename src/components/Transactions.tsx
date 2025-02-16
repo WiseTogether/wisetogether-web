@@ -3,12 +3,18 @@ import { FaPlus } from "react-icons/fa";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import NewTransaction from './NewTransaction';
 
+export interface transaction {
+    date:string,
+    amount:string,
+    category:string,
+    description:string|undefined,
+}; 
 
 const Transactions = () => {
 
     const [activeTab, setActiveTab] = useState<string>('all');
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState<boolean>(false);
-    const [transactions, setTransactions] = useState([]);
+    const [transactions, setTransactions] = useState<transaction[]>([]);
     
     const openModal = () => {
         setIsTransactionModalOpen(true);
@@ -101,7 +107,7 @@ const Transactions = () => {
                     </div>
 
                     {/* New Transaction Modal */}
-                    <NewTransaction />
+                    <NewTransaction closeModal={closeModal}/>
                 </div>
             )}
         </div>

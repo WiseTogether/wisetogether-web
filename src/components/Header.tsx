@@ -1,5 +1,5 @@
 import React from 'react'
-import userIcon from '../../public/user-icon.jpg'
+import userIcon from '../assets/user-icon.jpg'
 
 function Header() {
   return (
