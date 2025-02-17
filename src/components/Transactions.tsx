@@ -33,7 +33,7 @@ const Transactions = () => {
         
         setPersonalTransactions(allTransactions.filter((transaction) => transaction.type === 'Personal'));
         setSharedTransactions(allTransactions.filter((transaction) => transaction.type === 'Shared'));
-    },[])
+    },[activeTab])
 
     
     const openModal = (type:string) => {
@@ -184,7 +184,7 @@ const Transactions = () => {
                         </thead>
 
                         <tbody>
-                            {allTransactions.map((transaction) => (
+                            {sharedTransactions.map((transaction) => (
                                 <tr>
                                     <td className='p-2 justify-center'>
                                         <img src={userIcon} className='h-10 w-10 rounded-full'></img>
@@ -208,7 +208,7 @@ const Transactions = () => {
                                         </div>
                                     </td>
                                     <td className='flex gap-4 p-2'>
-                                        <div className='text-right'>
+                                        <div className='text-right w-25'>
                                             <p className='text-xs text-gray-400'>you paid</p>
                                             <p>¥ {Number(transaction.amount).toLocaleString()}</p>
                                         </div>

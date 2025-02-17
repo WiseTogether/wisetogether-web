@@ -1,5 +1,6 @@
 import { SetStateAction, Dispatch } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserAuth } from './context/AuthContext';
 import { FaAnglesLeft, FaAnglesRight } from "react-icons/fa6";
 
 interface SidebarProps {
@@ -11,6 +12,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  }
+
+  const { signOut } = UserAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+        await signOut();
+        navigate('/login');
+    } catch (error) {
+        console.error('An error occured: ', error)
+    }
   }
     
   return (
@@ -33,6 +46,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
           </li>
           <li className={`navbar-link ${isOpen ? 'block' : 'hidden'}`}>
             <Link to='/settings'>Settings</Link>
+          </li>
+          <li className={`navbar-link ${isOpen ? 'block' : 'hidden'}`} onClick={handleLogout}>
+            Logout
           </li>
         </ul>
       </nav>
