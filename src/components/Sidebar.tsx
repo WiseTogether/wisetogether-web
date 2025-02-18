@@ -1,6 +1,6 @@
 import { SetStateAction, Dispatch } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import { UserAuth } from './context/AuthContext';
+import { useAuth } from './Auth/AuthContext';
 import { FaAnglesLeft, FaAnglesRight } from "react-icons/fa6";
 
 interface SidebarProps {
@@ -14,7 +14,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
     setIsOpen(!isOpen);
   }
 
-  const { signOut } = UserAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {

@@ -4,8 +4,9 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
-import Register from './components/Register';
-import Login from './components/Login';
+import Register from './components/Auth/Register';
+import Login from './components/Auth/Login';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 function App() {
 
@@ -15,9 +16,9 @@ function App() {
           <Route path='/register' element={<Register />}></Route>
           <Route path='/login' element={<Login />}></Route>
           <Route path='/' element={<Layout />}>
-            <Route index element={<Dashboard />} /> {/* Default route */}
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="settings" element={<Settings />} />
+            <Route index element={<ProtectedRoute><Dashboard /></ProtectedRoute>} /> {/* Default route */}
+            <Route path="transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+            <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Route>
         </Routes>
       </div>

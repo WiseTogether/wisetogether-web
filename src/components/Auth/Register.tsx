@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
-import { UserAuth } from './context/AuthContext';
+import { useAuth } from './AuthContext';
+import { createUserProfile } from '../../api.ts/userApi';
 
 
 function Register() {
@@ -18,7 +19,7 @@ function Register() {
         confirmPassword: '',
     });
 
-    const { session, signUp } = UserAuth();
+    const { session, signUp, setUser, signOut } = useAuth();
     console.log(session)
     const navigate = useNavigate();
 
@@ -48,8 +49,13 @@ function Register() {
 
         try {
             const result = await signUp(signUpForm.email, signUpForm.password);
-            if (result.success) {
+            if (result.success && result.data && result.data.user) {
+                await createUserProfile(result.data.user.id, signUpForm.name)
+                const displayName = signUpForm.name.substring(0, signUpForm.name.indexOf(' '));
+                setUser({ name: displayName })
                 navigate('/')
+            } else {
+                console.error('Sign-up failed:', result)
             }
         } catch (error) {
             console.error('An error occured: ', error)
@@ -57,6 +63,15 @@ function Register() {
             setLoading(false);
         }
     }
+
+    const handleLogout = async () => {
+        try {
+            await signOut();
+            navigate('/register');
+        } catch (error) {
+            console.error('An error occured: ', error)
+        }
+      }
 
 
     return (
@@ -141,6 +156,7 @@ function Register() {
                 <Link to='/login' className='text-emerald-500 text-xs text-center underline'>Do you already have an account? Sign in</Link>
             </div>
             
+            <button onClick={handleLogout}>Logout</button>
         </div>
     )
 }
