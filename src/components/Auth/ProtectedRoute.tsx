@@ -7,7 +7,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { session } = useAuth();
+  const { session, loadingApp } = useAuth();
+
+  if(loadingApp) {
+    return <div>Loading ...</div> // Add a spinner later
+  }
 
   if (!session) {
     return <Navigate to='/login' />;

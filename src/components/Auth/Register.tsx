@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
-import { createUserProfile } from '../../api.ts/userApi';
+import { createUserProfile } from '../../api/userApi';
 
 
 function Register() {
@@ -19,7 +19,7 @@ function Register() {
         confirmPassword: '',
     });
 
-    const { session, signUp, setUser, signOut } = useAuth();
+    const { session, signUp, setUser } = useAuth();
     console.log(session)
     const navigate = useNavigate();
 
@@ -45,34 +45,30 @@ function Register() {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setLoading(true);
 
-        try {
-            const result = await signUp(signUpForm.email, signUpForm.password);
-            if (result.success && result.data && result.data.user) {
-                await createUserProfile(result.data.user.id, signUpForm.name)
-                const displayName = signUpForm.name.substring(0, signUpForm.name.indexOf(' '));
-                setUser({ name: displayName })
-                navigate('/')
-            } else {
-                console.error('Sign-up failed:', result)
-            }
-        } catch (error) {
-            console.error('An error occured: ', error)
-        } finally {
-            setLoading(false);
-        }
+        let params = new URLSearchParams(document.location.search);
+        let code = params.get('code');
+
+        console.log('params', params, 'code', code)
+
+        // setLoading(true);
+
+        // try {
+        //     const result = await signUp(signUpForm.email, signUpForm.password);
+        //     if (result.success && result.data && result.data.user) {
+        //         await createUserProfile(result.data.user.id, signUpForm.name)
+        //         const displayName = signUpForm.name.substring(0, signUpForm.name.indexOf(' '));
+        //         setUser({ name: displayName })
+        //         navigate('/')
+        //     } else {
+        //         console.error('Sign-up failed:', result)
+        //     }
+        // } catch (error) {
+        //     console.error('An error occured: ', error)
+        // } finally {
+        //     setLoading(false);
+        // }
     }
-
-    const handleLogout = async () => {
-        try {
-            await signOut();
-            navigate('/register');
-        } catch (error) {
-            console.error('An error occured: ', error)
-        }
-      }
-
 
     return (
         <div className='w-full flex flex-col justify-center items-center'>
@@ -156,7 +152,6 @@ function Register() {
                 <Link to='/login' className='text-emerald-500 text-xs text-center underline'>Do you already have an account? Sign in</Link>
             </div>
             
-            <button onClick={handleLogout}>Logout</button>
         </div>
     )
 }

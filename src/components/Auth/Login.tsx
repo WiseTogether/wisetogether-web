@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
-import { findProfileByUserId } from '../../api.ts/userApi';
+import { findProfileByUserId } from '../../api/userApi';
 
 
 const Login = () => {
@@ -24,13 +24,16 @@ const Login = () => {
             if (result.success && result.data && result.data.user) {
                 const userProfile = await findProfileByUserId(result.data.user.id)
                 const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
-                setUser({ name: displayName })
-                navigate('/')
+                setUser({ name: displayName, 'avatarUrl': userProfile.avatar });
+
+                localStorage.setItem('supabase_user', JSON.stringify({ name: displayName, 'avatarUrl': userProfile.avatar }));
+                navigate('/');
             } else {
                 setError('Incorrect email or password')
             }
         } catch (error) {
-            console.error('An error occured: ', error)
+            console.error('An error occured during sign-in: ', error);
+            setError('An unexpected error occurred.');
         } finally {
             setLoading(false);
         }

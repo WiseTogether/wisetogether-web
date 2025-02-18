@@ -11,10 +11,11 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 function App() {
 
   return (
-      <div>
+      <div className='h-full'>
         <Routes>
           <Route path='/register' element={<Register />}></Route>
           <Route path='/login' element={<Login />}></Route>
+          <Route path='/invite' element={<Register />}></Route>
           <Route path='/' element={<Layout />}>
             <Route index element={<ProtectedRoute><Dashboard /></ProtectedRoute>} /> {/* Default route */}
             <Route path="transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />

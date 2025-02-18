@@ -9,6 +9,7 @@ export interface AuthContextType {
     signOut: () => void;
     setUser: React.Dispatch<React.SetStateAction<UserProfile>>;
     user: UserProfile | null;
+    loadingApp: boolean;
 }
 
 interface SignUpAndSignInResponse {
@@ -31,17 +32,45 @@ interface AuthContextProviderProps {
 export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children }) => {
     const [session, setSession] = useState<Session|null>(null)
     const [user, setUser] = useState<UserProfile|null>(null)
+    const [loadingApp, setLoadingApp] = useState<boolean>(true);
 
     useEffect(() => {
-        
-        supabase.auth.getSession().then(({data: { session }}) => {
+
+        const loadSession = async () => {
+
+            // retrieves session data from Supabase
+            const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
-        });
+
+            // Store session in local storage
+            if (session) {
+                localStorage.setItem('supabase_session', JSON.stringify(session));
+            }
+
+            // Load user data from local storage
+            const userData = localStorage.getItem('supabase_user');
+            if (userData) {
+                setUser(JSON.parse(userData));
+            }
+
+            setLoadingApp(false);
+        };
+    
+        loadSession();
 
         const { data: { subscription }} = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
-        })
-
+            setLoadingApp(false);
+            
+            if (session) {
+                localStorage.setItem('supabase_session', JSON.stringify(session));
+            } else {
+                localStorage.removeItem('supabase_session');
+                localStorage.removeItem('supabase_user');
+                localStorage.removeItem('invitationLink');
+            }
+        });
+            
         return () => subscription.unsubscribe();
     },[])
 
@@ -80,11 +109,15 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
             console.error('There was an error signing out: ', error);
             return { success: false, error }
         }
+
+        localStorage.removeItem('supabase_session');
+        localStorage.removeItem('supabase_user');
+
         return { success: true }
     }
 
     return (
-        <AuthContext.Provider value={{ session, signUp, signOut, signIn, setUser, user }}> 
+        <AuthContext.Provider value={{ session, signUp, signOut, signIn, setUser, user, loadingApp }}> 
             {children}
         </AuthContext.Provider>
     )

@@ -27,14 +27,15 @@ export const createUserProfile = async (userId:string, name:string) => {
 export const findProfileByUserId = async (userId:string) => {
     try {
         const response = await fetch(`${baseUrl}/profiles/${userId}`)
-    
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Something went wrong with fetching the profile');
-        }
 
-        const data = await response.json();
-        return data;
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('User profile not found');
+            }
+            throw new Error('An error occurred while fetching the profile');
+        }
+        
+        return response.json();
     } catch (error) {
         console.error('Error fetching user profile: ', error);
         throw error;
