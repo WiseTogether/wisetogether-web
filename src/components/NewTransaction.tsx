@@ -1,29 +1,49 @@
-import { useState } from 'react'
-import { transaction } from './Transactions';
+import { useState, useEffect } from 'react'
+import { transaction } from '../App';
 import { IoClose } from "react-icons/io5";
+import { useAuth } from './Auth/AuthContext';
+import { addNewExpense } from '../api/transactionsApi';
 
 interface NewTransactionProps {
     closeModal: () => void,
     editTransaction: transaction|undefined,
     modalType: string,
+    setAllTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
+    allTransactions: transaction[];
+    setIsTransactionModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    expenseType: string,
+    setExpenseType: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransaction, modalType }) => {
+interface errors {
+    date: string,
+    amount: string,
+    category: string,
+}
+
+const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransaction, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType }) => {
 
     const [newTransaction, setNewTransaction] = useState<transaction>({
+        userId: '',
         date: new Date().toISOString().split('T')[0],
         amount: '',
         category: '-- Select Category --',
         description: undefined,
-        type:'',
     });
 
-    const [errors, setErrors] = useState<transaction>({
+    const [errors, setErrors] = useState<errors>({
         date: '',
         amount: '',
         category: '',
-        type:'',
     })
+
+    const { session } = useAuth();
+
+    useEffect(() => {
+        if (session && session.user) {
+            setNewTransaction({ ...newTransaction, userId: session.user.id})
+        }
+    }, [session]);
 
     const handleChange = (event:React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) => {
         const { name, value } = event.target;
@@ -37,7 +57,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const newErrors = { ...errors };
 
@@ -48,7 +68,12 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
         setErrors(newErrors);
 
-        console.log(newTransaction)
+        if (modalType === 'new') {
+            await addNewExpense(newTransaction);
+        }
+
+        setAllTransactions([newTransaction, ...allTransactions])
+        setIsTransactionModalOpen(false);
     }
 
     return (
@@ -62,6 +87,21 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                     ><IoClose /></button>
                 </div>
                 <div>
+                    {/* Tabs Navigation */}
+                    <div className='flex mb-6'>
+                        <button 
+                            onClick={() => setExpenseType('personal')}
+                            className={`p-2 w-30 ${expenseType === 'personal' ? 'border-t border-l border-r border-gray-200 rounded-t-md' : 'border-b border-gray-200'}`}
+                        > Personal
+                        </button>
+                        <button 
+                            onClick={() => setExpenseType('shared')}
+                            className={`p-2 w-30 ${expenseType === 'shared' ? 'border-t border-l border-r border-gray-200 rounded-t-md' : 'border-b border-gray-200'}`}                        
+                            > Shared
+                        </button>
+                        <div className='flex-1 border-b border-gray-200'></div>
+                    </div>
+
                     <form onSubmit={handleSubmit}>
                         <div className='space-y-4 w-full flex flex-col justify-center items-center mb-6'>
                             <div className='flex gap-2 w-4/5'>

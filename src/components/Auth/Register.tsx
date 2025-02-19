@@ -49,18 +49,14 @@ function Register() {
 
         const params = new URLSearchParams(document.location.search);
         const uniqueCode = params.get('code');
-        console.log('uniqueCode', uniqueCode)
         
         try {
             const result = await signUp(signUpForm.email, signUpForm.password);
-            console.log('result', result)
 
             if (result.success && result.data && result.data.user) {
-                console.log('creating user profile')
                 await createUserProfile(result.data.user.id, signUpForm.name)
                                 
                 if (uniqueCode) {
-                    console.log('adding user to shared account with code:', uniqueCode)
                     await addUserToSharedAccount(result.data.user.id, uniqueCode)
                 }
 

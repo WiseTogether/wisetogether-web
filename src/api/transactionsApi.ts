@@ -1,3 +1,5 @@
+import { transaction } from "../App";
+
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
 export const fetchAllTransactionsById = async (userId:string, sharedAccountId:string | null) => {
@@ -22,6 +24,29 @@ export const fetchAllTransactionsById = async (userId:string, sharedAccountId:st
         return response.json();
     } catch (error) {
         console.error('Error fetching expenses: ', error);
+        throw error;
+    }
+}
+
+export const addNewExpense = async (expense:transaction) => {
+    try {
+        const response = await fetch(`${baseUrl}/expenses/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(expense)
+        })
+    
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'An error occured while adding a new expense');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error adding new expense: ', error);
         throw error;
     }
 }

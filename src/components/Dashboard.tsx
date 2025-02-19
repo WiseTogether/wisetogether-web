@@ -61,12 +61,14 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
               </div>
             </Link>
 
-            <div className='flex-1 flex flex-col justify-center items-center gap-2 w-xs h-64 shadow-sm bg-emerald-400 p-6 text-center hover:cursor-pointer hover:scale-105 hover:shadow-lg transition-transform duration-300'
-              onClick={openModal}>
-              <PiUsers fontSize={50} color={'white'}/>
-              <h1 className='text-white text-xl'>Track shared expenses</h1>
-              <p className='text-white text-sm'>Invite your partner to set up a shared account.</p>
-            </div>
+            {!isInvitedByPartner && 
+              <div className='flex-1 flex flex-col justify-center items-center gap-2 w-xs h-64 shadow-sm bg-emerald-400 p-6 text-center hover:cursor-pointer hover:scale-105 hover:shadow-lg transition-transform duration-300'
+                onClick={openModal}>
+                <PiUsers fontSize={50} color={'white'}/>
+                <h1 className='text-white text-xl'>Track shared expenses</h1>
+                <p className='text-white text-sm'>Invite your partner to set up a shared account.</p>
+              </div>
+            }
 
             <Link to='/settings'>
               <div className='flex-1 flex flex-col justify-center items-center gap-2 w-xs h-64 shadow-sm bg-white p-6 text-center hover:cursor-pointer hover:scale-105 hover:shadow-lg transition-transform duration-300'>

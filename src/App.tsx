@@ -15,6 +15,7 @@ import { findSharedAccountByUserId } from './api/sharedAccountApi'
 
 export interface transaction {
   sharedAccountId?: string,
+  userId: string,
   date:string,
   amount:string,
   category:string,
@@ -34,7 +35,6 @@ function App() {
   useEffect(() => {
 
     const fetchTransactions = async () => {
-      console.log(session)
       if (session && session.user) {
         try {
           let sharedAccount = null;
@@ -45,13 +45,11 @@ function App() {
             if (sharedAccount.user2Id) {
               setIsInvitedByPartner(true);
             }
-            console.log(sharedAccount)
           } catch (error:any) {
             console.error ('Shared account not found: ', error.message)
           }
 
           const transactions = await fetchAllTransactionsById(session.user.id, sharedAccount ? sharedAccount.uuid : null);
-          console.log(transactions)
           setAllTransactions(transactions.length > 0 ? transactions : []);
         } catch (error:any) {
           console.error('Error fetching transactions: ', error.message);
@@ -62,10 +60,6 @@ function App() {
     fetchTransactions();
   }, [session])
 
-  useEffect(() => {
-    console.log(allTransactions)
-  }, [allTransactions])
-
   return (
       <div className='h-full'>
         <Routes>
@@ -74,7 +68,7 @@ function App() {
           <Route path='/invite' element={<Register />}></Route>
           <Route path='/' element={<Layout />}>
             <Route index element={<ProtectedRoute><Dashboard invitationLink={invitationLink} setInvitationLink={setInvitationLink} isInvitedByPartner={isInvitedByPartner} allTransactions={allTransactions}/></ProtectedRoute>} /> {/* Default route */}
-            <Route path="transactions" element={<ProtectedRoute><Transactions allTransactions={allTransactions}/></ProtectedRoute>} />
+            <Route path="transactions" element={<ProtectedRoute><Transactions allTransactions={allTransactions} setAllTransactions={setAllTransactions}/></ProtectedRoute>} />
             <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Route>
         </Routes>

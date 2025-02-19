@@ -5,20 +5,20 @@ import NewTransaction from './NewTransaction';
 import userIcon from '../assets/user-icon.jpg'
 import { transaction } from '../App';
 
-
-
 interface TransactionsProps {
     allTransactions: transaction[];
-  }
+    setAllTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
+}
 
-const Transactions: React.FC<TransactionsProps> = ({ allTransactions }) => {
+const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTransactions }) => {
 
     const [activeTab, setActiveTab] = useState<string>('all');
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState<boolean>(false);
     const [personalTransactions, setPersonalTransactions] = useState<transaction[]>([]);
     const [sharedTransactions, setSharedTransactions] = useState<transaction[]>([]);
-    const [editTransaction, setEditTransaction] = useState<transaction>()
-    const [modalType, setModalType] = useState<string>('')
+    const [editTransaction, setEditTransaction] = useState<transaction>();
+    const [modalType, setModalType] = useState<string>('');
+    const [expenseType, setExpenseType] = useState<string>('personal');
 
     useEffect(() => {
         setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
@@ -28,6 +28,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions }) => {
     
     const openModal = (type:string) => {
         setModalType(type)
+        setExpenseType(activeTab === 'shared' ? 'shared' : 'personal');
         setIsTransactionModalOpen(true);
     }
 
@@ -242,7 +243,16 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions }) => {
                     </div>
 
                     {/* New Transaction Modal */}
-                    <NewTransaction closeModal={closeModal} editTransaction={editTransaction} modalType={modalType}/>
+                    <NewTransaction 
+                        closeModal={closeModal} 
+                        editTransaction={editTransaction} 
+                        modalType={modalType} 
+                        setAllTransactions={setAllTransactions} 
+                        allTransactions={allTransactions}
+                        setIsTransactionModalOpen={setIsTransactionModalOpen}
+                        expenseType={expenseType}
+                        setExpenseType={setExpenseType}
+                    />
                 </div>
             )}
         </div>
