@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
-import { findProfileByUserId } from '../../api/userApi';
-
 
 const Login = () => {
 
@@ -12,7 +10,7 @@ const Login = () => {
     const [password, setPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
 
-    const { signIn, setUser } = useAuth();
+    const { signIn } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -21,12 +19,7 @@ const Login = () => {
 
         try {
             const result = await signIn(email, password);
-            if (result.success && result.data && result.data.user) {
-                const userProfile = await findProfileByUserId(result.data.user.id)
-                const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
-                setUser({ name: displayName, 'avatarUrl': userProfile.avatar });
-
-                localStorage.setItem('supabase_user', JSON.stringify({ name: displayName, 'avatarUrl': userProfile.avatar }));
+            if (result.success) {
                 navigate('/');
             } else {
                 setError('Incorrect email or password')

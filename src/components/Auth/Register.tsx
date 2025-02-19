@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
 import { createUserProfile } from '../../api/userApi';
+import { addUserToSharedAccount } from '../../api/sharedAccountApi'
 
 
 function Register() {
@@ -19,8 +20,7 @@ function Register() {
         confirmPassword: '',
     });
 
-    const { session, signUp, setUser } = useAuth();
-    console.log(session)
+    const { signUp } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (event:React.ChangeEvent<HTMLInputElement>) => {
@@ -45,29 +45,34 @@ function Register() {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setLoading(true);
 
-        let params = new URLSearchParams(document.location.search);
-        let code = params.get('code');
+        const params = new URLSearchParams(document.location.search);
+        const uniqueCode = params.get('code');
+        console.log('uniqueCode', uniqueCode)
+        
+        try {
+            const result = await signUp(signUpForm.email, signUpForm.password);
+            console.log('result', result)
 
-        console.log('params', params, 'code', code)
+            if (result.success && result.data && result.data.user) {
+                console.log('creating user profile')
+                await createUserProfile(result.data.user.id, signUpForm.name)
+                                
+                if (uniqueCode) {
+                    console.log('adding user to shared account with code:', uniqueCode)
+                    await addUserToSharedAccount(result.data.user.id, uniqueCode)
+                }
 
-        // setLoading(true);
-
-        // try {
-        //     const result = await signUp(signUpForm.email, signUpForm.password);
-        //     if (result.success && result.data && result.data.user) {
-        //         await createUserProfile(result.data.user.id, signUpForm.name)
-        //         const displayName = signUpForm.name.substring(0, signUpForm.name.indexOf(' '));
-        //         setUser({ name: displayName })
-        //         navigate('/')
-        //     } else {
-        //         console.error('Sign-up failed:', result)
-        //     }
-        // } catch (error) {
-        //     console.error('An error occured: ', error)
-        // } finally {
-        //     setLoading(false);
-        // }
+                navigate('/');
+            } else {
+                console.error('Sign-up failed:', result)
+            }
+        } catch (error) {
+            console.error('An error occured: ', error)
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (

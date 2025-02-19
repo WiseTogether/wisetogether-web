@@ -1,13 +1,13 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from "../../supabaseClient";
+import { findProfileByUserId } from '../../api/userApi';
 
 export interface AuthContextType {
     session: Session | null;
     signUp: (email:string, password:string) => Promise<SignUpAndSignInResponse>;
     signIn: (email:string, password:string) => Promise<SignUpAndSignInResponse>;
     signOut: () => void;
-    setUser: React.Dispatch<React.SetStateAction<UserProfile>>;
     user: UserProfile | null;
     loadingApp: boolean;
 }
@@ -38,19 +38,19 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
 
         const loadSession = async () => {
 
-            // retrieves session data from Supabase
+            // Retrieve session data from Supabase
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
 
-            // Store session in local storage
-            if (session) {
-                localStorage.setItem('supabase_session', JSON.stringify(session));
-            }
+            // Fetch user profile
+            if (session && session.user) {
+                const userProfile = await findProfileByUserId(session.user.id);
+                const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
 
-            // Load user data from local storage
-            const userData = localStorage.getItem('supabase_user');
-            if (userData) {
-                setUser(JSON.parse(userData));
+                setUser({
+                    name: displayName,
+                    avatarUrl: userProfile.avatar
+                });
             }
 
             setLoadingApp(false);
@@ -61,13 +61,19 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
         const { data: { subscription }} = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setLoadingApp(false);
-            
-            if (session) {
-                localStorage.setItem('supabase_session', JSON.stringify(session));
+
+            // Fetch user profile when session changes and update user state
+            if (session && session.user) {
+                findProfileByUserId(session.user.id).then(userProfile => {
+                    const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
+                    setUser({
+                      name: displayName,
+                      avatarUrl: userProfile.avatar
+                    });
+                  });
             } else {
-                localStorage.removeItem('supabase_session');
-                localStorage.removeItem('supabase_user');
-                localStorage.removeItem('invitationLink');
+                // Clear user data from state when logged out
+                setUser(null);
             }
         });
             
@@ -117,7 +123,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     }
 
     return (
-        <AuthContext.Provider value={{ session, signUp, signOut, signIn, setUser, user, loadingApp }}> 
+        <AuthContext.Provider value={{ session, signUp, signOut, signIn, user, loadingApp }}> 
             {children}
         </AuthContext.Provider>
     )

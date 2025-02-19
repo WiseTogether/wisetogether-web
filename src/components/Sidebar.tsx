@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
   }
     
   return (
-    <div className={`fixed top-0 left-0 h-full bg-emerald-500 text-white transition-all duration-300 ${
+    <div className={`fixed top-0 left-0 h-full bg-emerald-500 text-white transition-all duration-300 z-60 ${
           isOpen ? 'w-64 p-6' : 'w-16 py-6 px-2'
         }`}>
       <div className='flex items-center mb-6'>

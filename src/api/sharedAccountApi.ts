@@ -41,3 +41,27 @@ export const findSharedAccountByUserId = async (userId:string) => {
         throw error;
     }
 }
+
+export const addUserToSharedAccount = async (user2Id:string, uniqueCode:string) => {
+    const timestamp = new Date().toISOString();
+    try {
+        const response = await fetch(`${baseUrl}/shared-accounts/accept-invite?code=${uniqueCode}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user2Id, timestamp })
+        })
+    
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'An error occurred while adding user to the shared account');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error adding user to the shared account: ', error);
+        throw error;
+    }
+}
