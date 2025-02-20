@@ -42,7 +42,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
     // If no invitation link exists, create a new one
     if (!invitationLink) {
       const uniqueCode = Math.random().toString(36).substring(2, 8);
-      const newInvitationLink = `http://localhost:5173/invite?code=${uniqueCode}`;
+      const newInvitationLink = `${import.meta.env.VITE_APP_BASE_URL}/invite?code=${uniqueCode}`;
 
       setInvitationLink(newInvitationLink);
 
