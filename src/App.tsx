@@ -62,7 +62,10 @@ function App() {
                 const user = sharedAccount.user1Id === session.user.id ? 'user1' : 'user2'
                 if (user === 'user1') {
                   const partnerDetails = await findProfileByUserId(sharedAccount.user2Id);
-                  setPartnerProfile(partnerDetails);
+                  setPartnerProfile({
+                    name: partnerDetails.name.split(' ')[0],
+                    avatarUrl: partnerDetails.avatar
+                  });
                 } else {
                   const partnerDetails = await findProfileByUserId(sharedAccount.user1Id);
                   setPartnerProfile({
