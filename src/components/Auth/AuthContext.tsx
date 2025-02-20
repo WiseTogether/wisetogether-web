@@ -18,7 +18,7 @@ interface SignUpAndSignInResponse {
     error?: Error;
 }
 
-interface UserProfile {
+export interface UserProfile {
     name: string,
     avatarUrl?: string,
 }

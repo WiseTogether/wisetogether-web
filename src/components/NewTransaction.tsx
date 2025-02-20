@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { transaction } from '../App';
+import { transaction, sharedAccount } from '../App';
 import { IoClose } from "react-icons/io5";
 import { useAuth } from './Auth/AuthContext';
-import { addNewExpense } from '../api/transactionsApi';
+import { addNewPersonalExpense, addNewSharedExpense } from '../api/transactionsApi';
 
 interface NewTransactionProps {
     closeModal: () => void,
@@ -13,6 +13,9 @@ interface NewTransactionProps {
     setIsTransactionModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     expenseType: string,
     setExpenseType: React.Dispatch<React.SetStateAction<string>>;
+    sharedAccountDetails: sharedAccount|null;
+    setPersonalTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
+    setSharedTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
 }
 
 interface errors {
@@ -21,14 +24,17 @@ interface errors {
     category: string,
 }
 
-const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransaction, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType }) => {
+const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransaction, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType, sharedAccountDetails, setPersonalTransactions, setSharedTransactions }) => {
 
     const [newTransaction, setNewTransaction] = useState<transaction>({
+        sharedAccountId: '',
         userId: '',
         date: new Date().toISOString().split('T')[0],
         amount: '',
         category: '-- Select Category --',
         description: undefined,
+        splitType: 'equal',
+        splitDetails: { 'user1': 0, 'user2': 0 },
     });
 
     const [errors, setErrors] = useState<errors>({
@@ -41,9 +47,24 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
     useEffect(() => {
         if (session && session.user) {
-            setNewTransaction({ ...newTransaction, userId: session.user.id})
+            setNewTransaction((prevState) => ({ 
+                ...prevState, 
+                userId: session.user.id,
+                ...(sharedAccountDetails && { sharedAccountId: sharedAccountDetails.id })
+            }))
         }
-    }, [session]);
+    }, [session, sharedAccountDetails]);
+
+    useEffect(() => {
+        setNewTransaction({ ...newTransaction, splitDetails: { 'user1': 0, 'user2': 0 }})
+    }, [newTransaction.splitType])
+
+    useEffect(() => {
+        setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
+        setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
+    },[closeModal])
+
+    const categories = ['Groceries', 'Rent', 'Utilities', 'Insurance', 'Transportation', 'Dining Out', 'Entertainment', 'Healthcare', 'Personal Care', 'Miscellaneous']
 
     const handleChange = (event:React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) => {
         const { name, value } = event.target;
@@ -57,6 +78,31 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
+    const handleAmountChange = (event:React.ChangeEvent<HTMLInputElement>, user:string) => {
+        const { value } = event.target;
+
+        if (newTransaction.splitType === 'percentage') {
+
+            if (isNaN(Number(value)) || Number(value) < 0 || Number(value) > 100) return;
+    
+            const updatedSplitDetails = { ...newTransaction.splitDetails, [user]:Number(value) }
+
+            user === 'user1' ? updatedSplitDetails.user2 = (100 - Number(value)) : updatedSplitDetails.user1 = (100 - Number(value));
+    
+            setNewTransaction({ ...newTransaction, splitDetails: updatedSplitDetails })
+        } else if (newTransaction.splitType === 'custom') {
+            const amount = Number(newTransaction.amount)
+            if (isNaN(Number(value)) || Number(value) < 0 || Number(value) > amount) return;
+
+            const updatedSplitDetails = { ...newTransaction.splitDetails, [user]:Number(value) }
+
+            user === 'user1' ? updatedSplitDetails.user2 = (amount - Number(value)) : updatedSplitDetails.user1 = (amount - Number(value));
+            setNewTransaction({ ...newTransaction, splitDetails: updatedSplitDetails })
+        }
+
+    };
+
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const newErrors = { ...errors };
@@ -68,11 +114,33 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
         setErrors(newErrors);
 
-        if (modalType === 'new') {
-            await addNewExpense(newTransaction);
+        if (modalType === 'new' && session?.user) {
+            if (expenseType === 'personal') {
+                const personalExpense = { 
+                    userId: session?.user.id,
+                    date: newTransaction.date,
+                    amount: newTransaction.amount,
+                    category: newTransaction.category,
+                    description: newTransaction.description,
+                }
+                await addNewPersonalExpense(personalExpense);
+            }
+            if (expenseType === 'shared') {
+                const sharedExpense = { 
+                    sharedAccountId: sharedAccountDetails?.id,
+                    userId: session?.user.id,
+                    date: newTransaction.date,
+                    amount: newTransaction.amount,
+                    category: newTransaction.category,
+                    description: newTransaction.description,
+                    splitType: newTransaction.splitType,
+                    splitDetails: newTransaction.splitDetails,
+                }
+                await addNewSharedExpense(sharedExpense);
+            }
         }
 
-        setAllTransactions([newTransaction, ...allTransactions])
+        setAllTransactions([newTransaction, ...allTransactions]);
         setIsTransactionModalOpen(false);
     }
 
@@ -135,6 +203,102 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                 </div>
                             </div>
 
+                            {expenseType === 'shared' && 
+                                (<div className='flex gap-2 w-4/5'>
+                                    <p className='w-2/5 text-right'>Split: </p>
+
+                                    <div className='flex flex-col w-full'>
+                                        <fieldset>
+                                            <div>
+                                                <input 
+                                                    type='radio' 
+                                                    name='splitType' 
+                                                    value='equal'
+                                                    checked={newTransaction.splitType === 'equal'}
+                                                    onChange={handleChange}
+                                                    className='border-solid border-gray-200 border-1 inset-shadow-xs p-1' 
+                                                />
+                                                <label htmlFor='equal'> Equal</label>
+                                            </div>
+
+                                            <div>
+                                                <input 
+                                                    type='radio' 
+                                                    name='splitType' 
+                                                    value='percentage'
+                                                    onChange={handleChange}
+                                                    className='border-solid border-gray-200 border-1 inset-shadow-xs p-1' 
+                                                />
+                                                <label htmlFor='percentage'> Percentage</label>
+                                            </div>
+
+                                            {newTransaction.splitType === 'percentage' && (
+                                                <div className='flex items-center m-2'>
+                                                    <input 
+                                                        type='text' 
+                                                        id='user1-amount'
+                                                        name='user1-amount'
+                                                        className='border-b border-solid border-gray-200 p-1 w-15 mr-2' 
+                                                        value={newTransaction.splitDetails?.user1}
+                                                        onChange={(e) => handleAmountChange(e, 'user1')}
+                                                    />
+                                                    <p className='mr-10'>%</p>
+
+                                                    <input 
+                                                        type='text' 
+                                                        id='user2-amount'
+                                                        name='user2-amount'
+                                                        className='border-b border-solid border-gray-200 p-1 w-15 mr-2' 
+                                                        value={newTransaction.splitDetails?.user2}
+                                                        onChange={(e) => handleAmountChange(e, 'user2')}
+                                                    />
+                                                    <p>%</p>
+
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <input 
+                                                    type='radio' 
+                                                    name='splitType' 
+                                                    value='custom'
+                                                    onChange={handleChange}
+                                                    className='border-solid border-gray-200 border-1 inset-shadow-xs p-1' 
+                                                />
+                                                <label htmlFor='custom'> Custom</label>
+                                            </div>
+
+                                            {newTransaction.splitType === 'custom' && (
+                                                <div className='flex items-center mt-2 mb-2'>
+                                                    <p className='mr-2'>¥</p>
+                                                    <input 
+                                                        type='text' 
+                                                        id='user1-amount'
+                                                        name='user1-amount'
+                                                        className='border-b border-solid border-gray-200 p-1 w-20 mr-5' 
+                                                        value={newTransaction.splitDetails?.user1}
+                                                        onChange={(e) => handleAmountChange(e, 'user1')}
+                                                    />
+                                                    
+                                                    <p className='mr-2'>¥</p>
+                                                    <input 
+                                                        type='text' 
+                                                        id='user2-amount'
+                                                        name='user2-amount'
+                                                        className='border-b border-solid border-gray-200 p-1 w-20' 
+                                                        value={newTransaction.splitDetails?.user2}
+                                                        onChange={(e) => handleAmountChange(e, 'user2')}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* {errors.amount && <p className='text-red-500 text-xs'>{errors.amount}</p>} */}
+                                        </fieldset>
+                                    </div>
+
+                                </div>)
+                            }
+
                             <div className='flex gap-2 w-4/5'>
                                 <label htmlFor='category' className='w-2/5 text-right'>Category: </label>
                                 <div className='w-full'>
@@ -146,11 +310,11 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                         onChange={handleChange}
                                     >
                                         <option value='-- Select Category --'>-- Select Category --</option>
-                                        <option value='Groceries'>Groceries</option>
-                                        <option value='Rent'>Rent</option>
-                                        <option value='Utilities'>Utilities</option>
-                                        <option value='Insurance'>Insurance</option>
-                                        <option value='Date Nights'>Date Nights</option>
+                                        {categories.map((category) => (
+                                            <option key={category} value={category}>
+                                                {category}
+                                            </option>
+                                        ))}
                                     </select>
                                     {errors.category && <p className="text-red-500 text-xs">{errors.category}</p>}
                                 </div>

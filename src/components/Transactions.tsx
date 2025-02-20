@@ -3,14 +3,17 @@ import { FaPlus } from "react-icons/fa";
 import { FiEdit, FiTrash2, FiInfo } from "react-icons/fi";
 import NewTransaction from './NewTransaction';
 import userIcon from '../assets/user-icon.jpg'
-import { transaction } from '../App';
+import { transaction, sharedAccount } from '../App';
+import { useAuth, UserProfile } from './Auth/AuthContext';
 
 interface TransactionsProps {
     allTransactions: transaction[];
     setAllTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
+    sharedAccountDetails: sharedAccount|null;
+    partnerProfile: UserProfile|null
 }
 
-const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTransactions }) => {
+const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTransactions, sharedAccountDetails, partnerProfile }) => {
 
     const [activeTab, setActiveTab] = useState<string>('all');
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState<boolean>(false);
@@ -19,6 +22,8 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
     const [editTransaction, setEditTransaction] = useState<transaction>();
     const [modalType, setModalType] = useState<string>('');
     const [expenseType, setExpenseType] = useState<string>('personal');
+
+    const { session, user } = useAuth();
 
     useEffect(() => {
         setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
@@ -84,8 +89,8 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
 
                         <tbody>
                             {allTransactions.length ? 
-                                allTransactions.map((transaction) => (
-                                    <tr>
+                                allTransactions.map((transaction, index) => (
+                                    <tr key={index}>
                                         <td className='p-2 text-center'>
                                             <button className={`p-2 w-full rounded-md 
                                                 ${transaction.sharedAccountId ? 'bg-orange-100' : 'bg-purple-100'}`}>
@@ -137,8 +142,8 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
 
                         <tbody>
                             {personalTransactions.length ?
-                                personalTransactions.map((transaction) => (
-                                    <tr>
+                                personalTransactions.map((transaction, index) => (
+                                    <tr key={index}>
                                         <td className='p-2 text-center'>{new Date(transaction.date).toLocaleDateString('en-US')}</td>
                                         <td className='p-2 text-left'>
                                             <div className='flex items-center gap-2'>
@@ -186,10 +191,12 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
 
                         <tbody>
                             {sharedTransactions.length > 0 ?
-                                sharedTransactions.map((transaction) => (
-                                    <tr>
+                                sharedTransactions.map((transaction, index) => (
+                                    <tr key={index}>
                                         <td className='p-2 justify-center'>
-                                            <img src={userIcon} className='h-10 w-10 rounded-full'></img>
+                                            <img src={transaction.userId === session?.user.id ? user?.avatarUrl : partnerProfile?.avatarUrl || userIcon } 
+                                                className='h-10 w-10 rounded-full'>    
+                                            </img>
                                         </td>
                                         <td className='p-2 text-center'>{new Date(transaction.date).toLocaleDateString('en-US')}</td>
                                         <td className='p-2 text-left'>
@@ -211,12 +218,23 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                                         </td>
                                         <td className='flex gap-4 p-2'>
                                             <div className='text-right w-25'>
-                                                <p className='text-xs text-gray-400'>you paid</p>
-                                                <p>¥ {Number(transaction.amount).toLocaleString()}</p>
+                                                <p className='text-xs text-gray-400'>
+                                                    {transaction.userId === session?.user.id ? 'you paid' : 'user 2 paid'}
+                                                </p>
+                                                <p>
+                                                    ¥{' '}
+                                                    {Number(transaction.amount).toLocaleString()}
+                                                    
+                                                </p>
                                             </div>
                                             <div className='text-left'>
-                                                <p className='text-xs text-gray-400'>User 2 owes you</p>
-                                                <p>¥ {Number(transaction.amount).toLocaleString()}</p>
+                                                <p className='text-xs text-gray-400'>
+                                                    {transaction.userId === session?.user.id ? 'User 2 owes you' : 'You owe'}
+                                                </p>
+                                                {transaction.userId === session?.user.id 
+                                                    ? <p className='text-emerald-500'>¥ {Number(transaction.splitDetails?.user2_amount).toLocaleString()}</p>
+                                                    : <p className='text-red-500'>¥ {Number(transaction.splitDetails?.user2_amount).toLocaleString()}</p>
+                                                }
                                             </div>
                                         </td>
                                         <td className='p-2 text-right '>
@@ -252,6 +270,9 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                         setIsTransactionModalOpen={setIsTransactionModalOpen}
                         expenseType={expenseType}
                         setExpenseType={setExpenseType}
+                        sharedAccountDetails={sharedAccountDetails}
+                        setPersonalTransactions={setPersonalTransactions}
+                        setSharedTransactions={setSharedTransactions}
                     />
                 </div>
             )}

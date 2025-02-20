@@ -20,7 +20,6 @@ export const fetchAllTransactionsById = async (userId:string, sharedAccountId:st
             }
             throw new Error('An error occurred while fetching expenses');
         }
-        
         return response.json();
     } catch (error) {
         console.error('Error fetching expenses: ', error);
@@ -28,9 +27,9 @@ export const fetchAllTransactionsById = async (userId:string, sharedAccountId:st
     }
 }
 
-export const addNewExpense = async (expense:transaction) => {
+export const addNewPersonalExpense = async (expense:transaction) => {
     try {
-        const response = await fetch(`${baseUrl}/expenses/`, {
+        const response = await fetch(`${baseUrl}/expenses/personal`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -40,13 +39,36 @@ export const addNewExpense = async (expense:transaction) => {
     
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'An error occured while adding a new expense');
+            throw new Error(errorData.error || 'An error occured while adding a new personal expense');
         }
 
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error adding new expense: ', error);
+        console.error('Error adding new personal expense: ', error);
+        throw error;
+    }
+}
+
+export const addNewSharedExpense = async (expense:transaction) => {
+    try {
+        const response = await fetch(`${baseUrl}/expenses/shared`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(expense)
+        })
+    
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'An error occured while adding a new shared expense');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error adding new shared expense: ', error);
         throw error;
     }
 }
