@@ -54,7 +54,7 @@ function App() {
             sharedAccount = await findSharedAccountByUserId(session.user.id);
 
             // Create an invitation link for the shared account
-            const link = `http://localhost:5173/invite?code=${sharedAccount.uniqueCode}`
+            const link = `${import.meta.env.VITE_APP_BASE_URL}/invite?code=${sharedAccount.uniqueCode}`
             setInvitationLink(link);
 
             // Set the shared account details in state
