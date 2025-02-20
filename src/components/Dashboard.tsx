@@ -74,7 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
     });
 
     // Filter out categories with zero total
-    const categoriesWithTotals = categories.filter((category, index) => breakdown[index] > 0);
+    const categoriesWithTotals = categories.filter((_, index) => breakdown[index] > 0);
 
     // Update the categories list if it's different from the current state
     if (JSON.stringify(categoriesWithTotals) !== JSON.stringify(expenseCategories)) {

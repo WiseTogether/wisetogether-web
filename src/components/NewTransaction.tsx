@@ -24,7 +24,7 @@ interface errors {
     category: string,
 }
 
-const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransaction, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType, sharedAccountDetails, setPersonalTransactions, setSharedTransactions }) => {
+const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType, sharedAccountDetails, setPersonalTransactions, setSharedTransactions }) => {
 
     const [newTransaction, setNewTransaction] = useState<transaction>({
         sharedAccountId: '',
