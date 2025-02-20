@@ -1,16 +1,19 @@
-import { transaction } from "../App";
+import { transaction } from '../App';
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
+// Fetches all transactions for a specific user and optionally for a shared account.
 export const fetchAllTransactionsById = async (userId:string, sharedAccountId:string | null) => {
     try {
 
         let queries: { [key: string]: string } = { userId: userId };
 
+        // If a sharedAccountId is provided, include it in the query parameters
         if (sharedAccountId) {
             queries.sharedAccountId = sharedAccountId;
         }
 
+        // Convert query parameters to a URL query string
         const queryParams = new URLSearchParams(queries).toString();
         const response = await fetch(`${baseUrl}/expenses?${queryParams}`);
 
@@ -27,6 +30,7 @@ export const fetchAllTransactionsById = async (userId:string, sharedAccountId:st
     }
 }
 
+// Make a POST request to create a new personal expense
 export const addNewPersonalExpense = async (expense:transaction) => {
     try {
         const response = await fetch(`${baseUrl}/expenses/personal`, {
@@ -50,6 +54,7 @@ export const addNewPersonalExpense = async (expense:transaction) => {
     }
 }
 
+// Make a POST request to create a new shared expense
 export const addNewSharedExpense = async (expense:transaction) => {
     try {
         const response = await fetch(`${baseUrl}/expenses/shared`, {

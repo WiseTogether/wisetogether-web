@@ -25,22 +25,25 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
 
     const { session, user } = useAuth();
 
+    // useEffect hook to filter and set personal and shared transactions
     useEffect(() => {
         setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
         setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
     },[activeTab])
 
-    
+    // open modal for creating/editing transactions
     const openModal = (type:string) => {
         setModalType(type)
         setExpenseType(activeTab === 'shared' ? 'shared' : 'personal');
         setIsTransactionModalOpen(true);
     }
 
+    // Close the transaction modal
     const closeModal = () => {
         setIsTransactionModalOpen(false);
     }
 
+    // Handle opening a modal for editing a transaction
     const handleEdit = (transaction:transaction) => {
         setEditTransaction({...transaction});
         openModal('edit');
@@ -68,6 +71,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                     > Shared
                     </button>
 
+                    {/* Button to add a new transaction */}
                     <button 
                         className='ml-auto inline-flex items-center text-emerald-500 p-2 m-2 hover:cursor-pointer hover:text-emerald-300'
                         onClick={() => openModal('new')}>
@@ -75,6 +79,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                     </button>
                 </div>
 
+                {/* Conditional rendering of tables based on active tab */}
                 {activeTab === 'all' ? (
                     <table className='w-full'>
                         <thead>
@@ -91,12 +96,15 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                             {allTransactions.length ? 
                                 allTransactions.map((transaction, index) => (
                                     <tr key={index}>
+                                        {/* Display transaction type (shared or personal) */}
                                         <td className='p-2 text-center'>
                                             <button className={`p-2 w-full rounded-md 
                                                 ${transaction.sharedAccountId ? 'bg-orange-100' : 'bg-purple-100'}`}>
                                             {transaction.sharedAccountId ? 'shared' : 'personal'}</button>
                                         </td>
+                                        {/* Format and display the date */}
                                         <td className='p-2 text-center'>{new Date(transaction.date).toLocaleDateString('en-US')}</td>
+                                        {/* Display transaction category and description */}
                                         <td className='p-2 text-left'>
                                             <div className='flex items-center gap-2'>
                                                 <p>{transaction.category}</p>
@@ -114,8 +122,10 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                                                 )}
                                             </div>
                                         </td>
+                                        {/* Display transaction amount */}
                                         <td className='p-2 text-center'>¥ {Number(transaction.amount).toLocaleString()}</td>
                                         <td className='p-2 text-right '>
+                                            {/* Edit and Delete icons */}
                                             <div className='flex justify-center items-center'>
                                                 <FiEdit className='ml-2 hover:cursor-pointer' onClick={() => handleEdit(transaction)}/>
                                                 <FiTrash2 className='ml-2 hover:cursor-pointer'/>
@@ -193,11 +203,13 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                             {sharedTransactions.length > 0 ?
                                 sharedTransactions.map((transaction, index) => (
                                     <tr key={index}>
+                                        {/* Display user avatar depending on who made the transaction */}
                                         <td className='p-2 justify-center'>
                                             <img src={transaction.userId === session?.user.id ? user?.avatarUrl : partnerProfile?.avatarUrl || userIcon } 
                                                 className='h-10 w-10 rounded-full'>    
                                             </img>
                                         </td>
+                                        {/* Date, Category, and Amount columns */}
                                         <td className='p-2 text-center'>{new Date(transaction.date).toLocaleDateString('en-US')}</td>
                                         <td className='p-2 text-left'>
                                             <div className='flex items-center gap-2'>
@@ -248,9 +260,8 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                         </tbody>
                     </table>
                 )}
-
             </div>
-
+            
             {isTransactionModalOpen && (
                 <div>
                     <div className='fixed inset-0 bg-black opacity-50 z-40'>

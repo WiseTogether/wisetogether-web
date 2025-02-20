@@ -10,6 +10,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
 
+  // Function to toggle the sidebar open/close
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   }
@@ -17,10 +18,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Function to handle the logout process
   const handleLogout = async () => {
     try {
-        await signOut();
-        navigate('/login');
+        await signOut(); // Sign the user out
+        navigate('/login'); // Redirect to login page after successful logout
     } catch (error) {
         console.error('An error occured: ', error)
     }
@@ -30,12 +32,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen}) => {
     <div className={`fixed top-0 left-0 h-full bg-emerald-500 text-white transition-all duration-300 z-60 ${
           isOpen ? 'w-64 p-6' : 'w-16 py-6 px-2'
         }`}>
+      
+      {/* Sidebar header with the app name and toggle button */}
       <div className='flex items-center mb-6'>
         <h2 className={`flex-1 text-2xl font-semibold ${isOpen ? 'block' : 'hidden'}`}>WiseTogether</h2>
         <button className='py-2 px-4 rounded-lg hover:bg-emerald-700' onClick={toggleSidebar}>
             {isOpen ? <FaAnglesLeft /> : <FaAnglesRight />}
         </button>
       </div>
+
+      {/* Sidebar navigation links */}
       <nav>
         <ul>
           <li className={`navbar-link ${isOpen ? 'block' : 'hidden'}`}>

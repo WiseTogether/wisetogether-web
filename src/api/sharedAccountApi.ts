@@ -1,6 +1,6 @@
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
-
+// Make a POST request to create a new shared account
 export const createSharedAccount = async (userId:string, uniqueCode:string) => {
     try {
         const response = await fetch(`${baseUrl}/shared-accounts`, {
@@ -24,6 +24,7 @@ export const createSharedAccount = async (userId:string, uniqueCode:string) => {
     }
 }
 
+// Make a GET request to fetch the shared account for the specified userId
 export const findSharedAccountByUserId = async (userId:string) => {
     try {
         const response = await fetch(`${baseUrl}/shared-accounts/${userId}`)
@@ -42,6 +43,7 @@ export const findSharedAccountByUserId = async (userId:string) => {
     }
 }
 
+// Make a PATCH request to add a user to an existing shared account using a unique code
 export const addUserToSharedAccount = async (user2Id:string, uniqueCode:string) => {
     const timestamp = new Date().toISOString();
     try {

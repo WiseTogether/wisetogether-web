@@ -9,17 +9,20 @@ interface InvitationCardProps {
 
 const InvitationCard: React.FC<InvitationCardProps> = ({ setIsModalOpen, invitationLink }) => {
 
+    // Function to copy the invitation link to clipboard
     const copyToClipboard = () => {
         navigator.clipboard.writeText(invitationLink).then(() => {
-          alert('Invitation link copied to clipboard!');
+          alert('Invitation link copied to clipboard!'); // Alert the user when the link is copied successfully
         }).catch((error) => {
           console.error('Failed to copy text: ', error);
         });
-      };
+    };
 
     return (
         <div className='fixed inset-0 flex justify-center items-center z-50'>
             <div className='bg-white p-6 rounded-md shadow-lg w-lg'>
+
+                {/* Header with title and close button */}
                 <div className='mb-6 w-full flex'>
                     <h2 className='text-emerald-500 text-3xl'>Invitation Link:</h2>
                     <button 
@@ -28,6 +31,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({ setIsModalOpen, invitat
                     ><IoClose /></button>
                 </div>
 
+                {/* Display invitation link and option to copy it */}
                 <div className='flex items-center border-solid border-gray-200 border-1 rounded-md inset-shadow-xs w-full' >
                     <p className='text-sm text-gray-500 p-3'>{invitationLink}</p>
                     <button className='border-solid border-gray-200 border-l-1 p-3 ml-auto hover:cursor-pointer'

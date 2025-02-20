@@ -41,29 +41,37 @@ function App() {
 
   const { session } = useAuth();
 
+  // Fetch transactions and shared account details when the session changes
   useEffect(() => {
 
     const fetchTransactions = async () => {
       if (session && session.user) {
         try {
           let sharedAccount = null;
+
+          // Attempt to fetch shared account details for the user
           try {
             sharedAccount = await findSharedAccountByUserId(session.user.id);
 
+            // Create an invitation link for the shared account
             const link = `http://localhost:5173/invite?code=${sharedAccount.uniqueCode}`
             setInvitationLink(link);
 
+            // Set the shared account details in state
             setSharedAccountDetails({ id: sharedAccount.uuid, user1Id: sharedAccount.user1Id })
+
+            // If there is a second user, set shared account details
             if (sharedAccount.user2Id) {
               setSharedAccountDetails({ id: sharedAccount.uuid, user1Id: sharedAccount.user1Id, user2Id: sharedAccount.user2Id })
               setIsInvitedByPartner(true);
-
+              
+              // Fetch partner profile based on user1Id or user2Id
               try {
                 const user = sharedAccount.user1Id === session.user.id ? 'user1' : 'user2'
                 if (user === 'user1') {
                   const partnerDetails = await findProfileByUserId(sharedAccount.user2Id);
                   setPartnerProfile({
-                    name: partnerDetails.name.split(' ')[0],
+                    name: partnerDetails.name.split(' ')[0], // Get first name of partner
                     avatarUrl: partnerDetails.avatar
                   });
                 } else {
@@ -81,6 +89,7 @@ function App() {
             console.error ('Shared account not found: ', error.message)
           }
 
+          // Fetch transactions for the current user and shared account (if any)
           const transactions = await fetchAllTransactionsById(session.user.id, sharedAccount ? sharedAccount.uuid : null);
           setAllTransactions(transactions.length > 0 ? transactions : []);
         } catch (error:any) {

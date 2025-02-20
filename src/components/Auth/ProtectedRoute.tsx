@@ -9,14 +9,17 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { session, loadingApp } = useAuth();
 
+  // Show a loading message while checking if user data is ready
   if(loadingApp) {
     return <div>Loading ...</div> // Add a spinner later
   }
 
+  // If there is no session, redirect to the login page
   if (!session) {
     return <Navigate to='/login' />;
   }
 
+  // If the user is authenticated, render the protected route's children
   return <>{children}</>;
 };
 

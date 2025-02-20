@@ -45,6 +45,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
     const { session } = useAuth();
 
+    // Set the userId and sharedAccountId when session or sharedAccountDetails change
     useEffect(() => {
         if (session && session.user) {
             setNewTransaction((prevState) => ({ 
@@ -55,10 +56,12 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
         }
     }, [session, sharedAccountDetails]);
 
+    // Reset split details whenever the split type changes
     useEffect(() => {
         setNewTransaction({ ...newTransaction, splitDetails: { 'user1': 0, 'user2': 0 }})
     }, [newTransaction.splitType])
 
+    // Update personal and shared transactions on closeModal
     useEffect(() => {
         setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
         setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
@@ -66,9 +69,11 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
     const categories = ['Groceries', 'Rent', 'Utilities', 'Insurance', 'Transportation', 'Dining Out', 'Entertainment', 'Healthcare', 'Personal Care', 'Miscellaneous']
 
+    // Handle form input changes
     const handleChange = (event:React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) => {
         const { name, value } = event.target;
 
+        // Validate amount input to ensure it contains only numbers and periods
         if (name === 'amount' && (/[^0-9.]/.test(value))) {
             setErrors({ ...errors, amount: 'Please enter an amount with no commas, letters, or symbols.'})
         } else {
@@ -78,6 +83,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
         setNewTransaction({ ...newTransaction, [name]: value });
     };
 
+    // Handle split amount changes (percentage or custom split)
     const handleAmountChange = (event:React.ChangeEvent<HTMLInputElement>, user:string) => {
         const { value } = event.target;
 
@@ -87,6 +93,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
     
             const updatedSplitDetails = { ...newTransaction.splitDetails, [user]:Number(value) }
 
+            // Adjust the split details to maintain 100% total
             user === 'user1' ? updatedSplitDetails.user2 = (100 - Number(value)) : updatedSplitDetails.user1 = (100 - Number(value));
     
             setNewTransaction({ ...newTransaction, splitDetails: updatedSplitDetails })
@@ -96,13 +103,14 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
             const updatedSplitDetails = { ...newTransaction.splitDetails, [user]:Number(value) }
 
+            // Adjust the other user's share in custom split
             user === 'user1' ? updatedSplitDetails.user2 = (amount - Number(value)) : updatedSplitDetails.user1 = (amount - Number(value));
             setNewTransaction({ ...newTransaction, splitDetails: updatedSplitDetails })
         }
 
     };
 
-
+    // Handle form submission
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const newErrors = { ...errors };
@@ -114,6 +122,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
 
         setErrors(newErrors);
 
+        // Add personal or shared expense if no errors
         if (modalType === 'new' && session?.user) {
             if (expenseType === 'personal') {
                 const personalExpense = { 
@@ -140,6 +149,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
             }
         }
 
+        // Update all transactions state with the new transaction
         setAllTransactions([newTransaction, ...allTransactions]);
         setIsTransactionModalOpen(false);
     }
@@ -147,6 +157,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
     return (
         <div className='fixed inset-0 flex justify-center items-center z-50'>
             <div className='bg-white p-6 rounded-md shadow-lg w-lg'>
+                {/* Modal title and close button */}
                 <div className='mb-6 w-full flex'>
                     <h2 className='text-emerald-500 text-3xl'>{modalType === 'edit' ? 'Edit Transaction' : 'Add Transaction'}</h2>
                     <button 
@@ -155,7 +166,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                     ><IoClose /></button>
                 </div>
                 <div>
-                    {/* Tabs Navigation */}
+                    {/* Tabs for selecting expense type */}
                     <div className='flex mb-6'>
                         <button 
                             onClick={() => setExpenseType('personal')}
@@ -170,8 +181,10 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                         <div className='flex-1 border-b border-gray-200'></div>
                     </div>
 
+                    {/* Form for adding a new transaction */}
                     <form onSubmit={handleSubmit}>
                         <div className='space-y-4 w-full flex flex-col justify-center items-center mb-6'>
+                            {/* Date Input */}
                             <div className='flex gap-2 w-4/5'>
                                 <label htmlFor='date' className='w-2/5 text-right'>Date: </label>
                                 <div className='w-full'>
@@ -187,6 +200,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                 </div>
                             </div>
 
+                            {/* Amount Input */}
                             <div className='flex gap-2 w-4/5'>
                                 <label htmlFor='amount' className='w-2/5 text-right'>Amount: </label>
                                 <div className='w-full'>
@@ -203,12 +217,14 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                 </div>
                             </div>
 
+                            {/* Shared Expense Split Type */}
                             {expenseType === 'shared' && 
                                 (<div className='flex gap-2 w-4/5'>
                                     <p className='w-2/5 text-right'>Split: </p>
 
                                     <div className='flex flex-col w-full'>
                                         <fieldset>
+                                            {/* Radio Buttons for Split Type */}
                                             <div>
                                                 <input 
                                                     type='radio' 
@@ -299,6 +315,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                 </div>)
                             }
 
+                            {/* Category Selection */}
                             <div className='flex gap-2 w-4/5'>
                                 <label htmlFor='category' className='w-2/5 text-right'>Category: </label>
                                 <div className='w-full'>
@@ -319,7 +336,8 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                     {errors.category && <p className="text-red-500 text-xs">{errors.category}</p>}
                                 </div>
                             </div>
-
+                            
+                            {/* Description Input */}
                             <div className='flex gap-2 w-4/5'>
                                 <label htmlFor='description' className='w-2/5 text-right'>Description: </label>
                                 <div className='w-full'>
@@ -334,7 +352,8 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, editTransac
                                 </div>
                             </div>
                         </div>
-
+                        
+                        {/* Submit Button */}
                         <div className='flex justify-end gap-2'>
                             <button 
                                 type='submit' 

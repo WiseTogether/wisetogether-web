@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
 
+
 const Login = () => {
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -13,14 +14,16 @@ const Login = () => {
     const { signIn } = useAuth();
     const navigate = useNavigate();
 
+    // Handle form submission
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setLoading(true);
 
         try {
+            // Call signIn method from AuthContext to authenticate the user
             const result = await signIn(email, password);
             if (result.success) {
-                navigate('/');
+                navigate('/'); // If successful, navigate to the dashboard
             } else {
                 setError('Incorrect email or password')
             }
@@ -35,6 +38,8 @@ const Login = () => {
     return (
         <div className='w-full flex flex-col justify-center items-center'>
             <h1 className='text-emerald-500 text-3xl text-center m-10'>Welcome Back!</h1>
+
+            {/* Google Sign-In Button */}
             <div className='w-2/3 flex justify-center items-center p-6'>
                 <button 
                     type='submit' 
@@ -43,15 +48,18 @@ const Login = () => {
                 <FcGoogle />Sign in with Google</button>
             </div>
 
+            {/* OR separator */}
             <div className='flex items-center justify-center w-2/3 my-4'>
                 <hr className="flex-1 border-gray-200 border-1" />
                 <span className="px-4 text-stone-700">or</span>
                 <hr className="flex-1 border-gray-200 border-1" />
             </div>
 
+            {/* Sign-In Form */}
             <div className='w-2/3 flex flex-col justify-center items-center mb-6'>
                 <div className='w-3/4 border-solid border-black p-6'>
                     <form onSubmit={handleSubmit}>
+                        {/* Email Input */}
                         <div className='gap-2 flex flex-col justify-center items-center mb-6'>
                             <input
                                 className='border-solid border-gray-200 border-1 inset-shadow-xs p-2 w-full' 
@@ -64,6 +72,7 @@ const Login = () => {
                             />
                         </div>
 
+                        {/* Password Input */}
                         <div className='gap-2 flex flex-col justify-center items-left mb-6'>
                             <input 
                                 className='border-solid border-gray-200 border-1 inset-shadow-xs p-2 w-full' 
@@ -77,6 +86,7 @@ const Login = () => {
                             {error && <p className="text-red-500 text-xs">{error}</p>}               
                         </div>
 
+                        {/* Submit Button */}
                         <div className='flex justify-center items-center w-full'>
                             <button 
                                 type='submit' 
@@ -86,6 +96,8 @@ const Login = () => {
                         </div>
                     </form>
                 </div>
+                
+                {/* Link to Registration page */}
                 <Link to='/register' className='text-emerald-500 text-xs text-center underline'>Don't have an account? Sign up</Link>
             </div>
 

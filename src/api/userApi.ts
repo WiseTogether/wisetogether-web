@@ -1,6 +1,6 @@
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
-
+// Make a POST request to create a new user profile
 export const createUserProfile = async (userId:string, name:string) => {
     try {
         const response = await fetch(`${baseUrl}/profiles/`, {
@@ -24,6 +24,7 @@ export const createUserProfile = async (userId:string, name:string) => {
     }
 }
 
+// Fetches the profile of a user by their user ID.
 export const findProfileByUserId = async (userId:string) => {
     try {
         const response = await fetch(`${baseUrl}/profiles/${userId}`)
