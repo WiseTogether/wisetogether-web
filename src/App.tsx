@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Switch } from 'react-router-dom';
 import { useState } from 'react'
 import './styles/App.css'
 import Layout from './components/Layout';
@@ -104,14 +104,15 @@ function App() {
   return (
       <div className='h-full'>
         <Routes>
-          <Route path='/register' element={<Register />}></Route>
-          <Route path='/login' element={<Login />}></Route>
-          <Route path='/invite' element={<Register />}></Route>
+          <Route path='/register' element={<Register />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/invite' element={<Register />} />
           <Route path='/' element={<Layout />}>
             <Route index element={<ProtectedRoute><Dashboard invitationLink={invitationLink} setInvitationLink={setInvitationLink} isInvitedByPartner={isInvitedByPartner} allTransactions={allTransactions}/></ProtectedRoute>} /> {/* Default route */}
             <Route path="transactions" element={<ProtectedRoute><Transactions allTransactions={allTransactions} setAllTransactions={setAllTransactions} sharedAccountDetails={sharedAccountDetails} partnerProfile={partnerProfile}/></ProtectedRoute>} />
             <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Route>
+          <Route path="*" element={<Register />} />
         </Routes>
       </div>
   )
