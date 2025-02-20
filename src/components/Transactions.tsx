@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FaPlus } from "react-icons/fa";
 import { FiEdit, FiTrash2, FiInfo } from "react-icons/fi";
 import NewTransaction from './NewTransaction';
@@ -22,6 +22,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
     const [editTransaction, setEditTransaction] = useState<transaction>();
     const [modalType, setModalType] = useState<string>('');
     const [expenseType, setExpenseType] = useState<string>('personal');
+    const [file, setFile] = useState<File | null>(null);
 
     const { session, user } = useAuth();
 
@@ -49,6 +50,25 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
         openModal('edit');
     }
 
+    // Handle image file change
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFile(e.target.files[0]);
+        }
+    };
+    
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleButtonClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (!inputRef || !inputRef.current) return;
+        inputRef.current.click();
+    }
+
+    useEffect(() => {
+        
+    },[file])
+    
     return (
         <div className='w-full p-6'>
             <div className='shadow-sm bg-white p-6'>
@@ -73,10 +93,23 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
 
                     {/* Button to add a new transaction */}
                     <button 
-                        className='ml-auto inline-flex items-center text-emerald-500 p-2 m-2 hover:cursor-pointer hover:text-emerald-300'
+                        className='ml-auto inline-flex items-center text-emerald-500 p-2 mb-2 hover:cursor-pointer hover:text-emerald-300'
                         onClick={() => openModal('new')}>
                             <FaPlus className='mr-2'/> Add transaction
                     </button>
+
+                    {/* Add File Upload Button */}
+                    <form>
+                        <button className='ml-2 p-2 h-10 bg-emerald-500 text-white rounded' onClick={handleButtonClick}>Upload Receipt</button>
+                        <input 
+                            type='file' 
+                            ref={inputRef}
+                            accept='image/*,application/pdf'
+                            onChange={handleFileUpload}
+                            className='absolute -left-full'
+                        />
+                        
+                    </form>
                 </div>
 
                 {/* Conditional rendering of tables based on active tab */}
