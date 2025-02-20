@@ -1,4 +1,4 @@
-import { Routes, Route, Switch } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useState } from 'react'
 import './styles/App.css'
 import Layout from './components/Layout';
