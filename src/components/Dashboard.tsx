@@ -87,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
   // Data for pie charts
   const expensesByCategoryData = calculateExpenseBreakdown();
 
-  return (    
+  return (
     <div className='flex flex-col p-6 gap-4 items-center justify-center'>
       
       {/* Displayed when there are no transactions */}
@@ -143,12 +143,14 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
 
       {/* Displayed when there are transactions */}
       {allTransactions.length > 0 && (
-        <div className='flex gap-10'>
+        <div className='flex gap-5 w-full justify-center items-center'>
           {/* Pie charts displaying expenses */}
-          <div>
+          <div className='flex-1 flex flex-col justify-center items-center gap-2 w-1/2 h-120 shadow-sm bg-white p-10 text-center'>
+            <h2 className='flex-1 font-bold text-stone-600'>Personal vs Shared Expenses</h2>
             <PieChart data={expenseByType} labels={['Personal', 'Shared']} title={'Personal vs Shared Expenses'} />
           </div>
-          <div>
+          <div className='flex-1 flex flex-col justify-center items-center gap-2 w-1/2 h-120 shadow-sm bg-white p-10 text-center'>
+            <h2 className='flex-1 font-bold text-stone-600'>Expense Category Breakdown</h2>
             <PieChart data={expensesByCategoryData} labels={expenseCategories} title={'Expense Category Breakdown'} />
           </div>
         </div>

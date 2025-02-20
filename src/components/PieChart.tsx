@@ -36,7 +36,7 @@ const PieChart: React.FC<PieChartProps> = ({ data, labels, title }) => {
         responsive: true,
         plugins: {
             title: {
-                display: true,
+                display: false,
                 text: title,
             },
             tooltip: {
