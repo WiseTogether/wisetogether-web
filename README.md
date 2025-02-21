@@ -45,3 +45,18 @@ To start the app locally, run the following command:
 ```bash 
 npm run dev
 ```
+
+## Contributing
+
+We welcome contributions to the WiseTogether project! If you’d like to help out, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch `git checkout -b feature-name`.
+3. Make your changes and commit them `git commit -am 'Add feature'`.
+4. Push to your branch `git push origin feature-name`.
+5. Open a pull request.
+
+
+## License
+
+WiseTogether is open-source and available under the MIT License.
