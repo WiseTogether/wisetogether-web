@@ -23,15 +23,25 @@ To get started with the project locally, follow these steps:
 
 ### Install Dependencies
 
-```npm install```
+```bash 
+npm install
+```
 
 ### Environment Variables
 
-```VITE_API_BASE_URL=backend_api_url
+Before running the app locally, create a .env file in the root of your project and add the following:
+
+```
+VITE_API_BASE_URL=backend_api_url
 VITE_APP_BASE_URL=frontend_app_url
 VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key```
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-### Environment Variables
+### Running the Development Server
 
-```npm run dev```
+To start the app locally, run the following command:
+
+```bash 
+npm run dev
+```
