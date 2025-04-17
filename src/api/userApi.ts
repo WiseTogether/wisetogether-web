@@ -25,15 +25,23 @@ export const createUserProfile = async (userId:string, name:string) => {
 }
 
 // Fetches the profile of a user by their user ID.
-export const findProfileByUserId = async (userId:string) => {
+export const getUserProfile = async (userId:string, token: string) => {
     try {
-        const response = await fetch(`${baseUrl}/profiles/${userId}`)
+        const response = await fetch(`${baseUrl}/profiles/${userId}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                'X-Supabase-Auth': token,
+            }
+        });
 
         if (!response.ok) {
             if (response.status === 404) {
                 throw new Error('User profile not found');
             }
-            throw new Error('An error occurred while fetching the profile');
+            throw new Error('An error occurred while fetching user profile');
         }
         
         return response.json();

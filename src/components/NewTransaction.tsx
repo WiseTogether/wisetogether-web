@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { transaction, sharedAccount } from '../App';
 import { IoClose } from "react-icons/io5";
-import { useAuth } from './Auth/AuthContext';
+import { useAuth } from '../auth/AuthContext';
 import { addNewPersonalExpense, addNewSharedExpense } from '../api/transactionsApi';
 
 interface NewTransactionProps {
@@ -16,6 +16,7 @@ interface NewTransactionProps {
     sharedAccountDetails: sharedAccount|null;
     setPersonalTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
     setSharedTransactions: React.Dispatch<React.SetStateAction<transaction[]>>;
+    isTransactionModalOpen: boolean;
 }
 
 interface errors {
@@ -24,7 +25,7 @@ interface errors {
     category: string,
 }
 
-const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType, sharedAccountDetails, setPersonalTransactions, setSharedTransactions }) => {
+const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, setAllTransactions, allTransactions, setIsTransactionModalOpen, expenseType, setExpenseType, sharedAccountDetails, setPersonalTransactions, setSharedTransactions, isTransactionModalOpen }) => {
 
     const [newTransaction, setNewTransaction] = useState<transaction>({
         sharedAccountId: '',
@@ -48,11 +49,14 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, 
     // Set the userId and sharedAccountId when session or sharedAccountDetails change
     useEffect(() => {
         if (session && session.user) {
-            setNewTransaction((prevState) => ({ 
-                ...prevState, 
-                userId: session.user.id,
-                ...(sharedAccountDetails && { sharedAccountId: sharedAccountDetails.id })
-            }))
+            const transaction = newTransaction;
+            transaction.userId = session.user.id,
+            setNewTransaction(transaction)
+            // setNewTransaction((prevState) => ({ 
+            //     ...prevState, 
+            //     userId: session.user.id,
+            //     ...(sharedAccountDetails && { sharedAccountId: sharedAccountDetails.id })
+            // }))
         }
     }, [session, sharedAccountDetails]);
 
@@ -65,7 +69,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, 
     useEffect(() => {
         setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
         setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
-    },[closeModal])
+    },[isTransactionModalOpen])
 
     const categories = ['Groceries', 'Rent', 'Utilities', 'Insurance', 'Transportation', 'Dining Out', 'Entertainment', 'Healthcare', 'Personal Care', 'Miscellaneous']
 

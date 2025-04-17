@@ -7,10 +7,10 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { session, loadingApp } = useAuth();
+  const { session, isLoading } = useAuth();
 
   // Show a loading message while checking if user data is ready
-  if(loadingApp) {
+  if(isLoading) {
     return <div>Loading ...</div> // Add a spinner later
   }
 

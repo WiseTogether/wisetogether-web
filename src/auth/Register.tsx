@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
-import { createUserProfile } from '../../api/userApi';
-import { addUserToSharedAccount } from '../../api/sharedAccountApi'
+import { createUserProfile } from '../api/userApi';
+import { addUserToSharedAccount } from '../api/sharedAccountApi'
 
 
 function Register() {

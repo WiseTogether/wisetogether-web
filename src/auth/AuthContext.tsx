@@ -1,18 +1,18 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../../supabaseClient';
-import { findProfileByUserId } from '../../api/userApi';
+import { supabase } from '../supabaseClient';
+import { getUserProfile } from '../api/userApi';
 
 export interface AuthContextType {
     session: Session | null;
-    signUp: (email:string, password:string) => Promise<SignUpAndSignInResponse>;
-    signIn: (email:string, password:string) => Promise<SignUpAndSignInResponse>;
-    signOut: () => void;
     user: UserProfile | null;
-    loadingApp: boolean;
+    isLoading: boolean;
+    signUp: (email:string, password:string) => Promise<SupabaseResponse>;
+    signIn: (email:string, password:string) => Promise<SupabaseResponse>;
+    signOut: () => Promise<SupabaseResponse>;
 }
 
-interface SignUpAndSignInResponse {
+interface SupabaseResponse {
     success: boolean;
     data?: { user: User | null; session: Session | null };
     error?: Error;
@@ -32,9 +32,9 @@ interface AuthContextProviderProps {
 
 // Responsible for managing user authentication state
 export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children }) => {
-    const [session, setSession] = useState<Session|null>(null)
-    const [user, setUser] = useState<UserProfile|null>(null)
-    const [loadingApp, setLoadingApp] = useState<boolean>(true);
+    const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
         // Function to load the session and user profile
@@ -44,9 +44,9 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
 
-            // Fetch user profile using the user ID
+            // Fetch user profile
             if (session && session.user) {
-                const userProfile = await findProfileByUserId(session.user.id);
+                const userProfile = await getUserProfile(session.user.id, session.access_token);
                 const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' ')); // Get the first name
 
                 setUser({
@@ -55,7 +55,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
                 });
             }
 
-            setLoadingApp(false);
+            setIsLoading(false);
         };
     
         loadSession();
@@ -63,33 +63,33 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
         // Listen for authentication state changes (when user logs in or logs out)
         const { data: { subscription }} = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session); // Update session state when auth state changes
-            setLoadingApp(false);
-
+            
             // If session is valid, fetch and set user profile data
             if (session && session.user) {
-                findProfileByUserId(session.user.id).then(userProfile => {
+                getUserProfile(session.user.id, session.access_token).then(userProfile => {
                     const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
                     setUser({
-                      name: displayName,
-                      avatarUrl: userProfile.avatar
+                        name: displayName,
+                        avatarUrl: userProfile.avatar
                     });
-                  });
+                });
             } else {
                 // Clear user data from state when logged out
                 setUser(null);
             }
+            setIsLoading(false);
         });
         
         // Clean up the subscription when the component unmounts
         return () => subscription.unsubscribe();
     },[])
 
-    // Sign up function to create a new user account
-    const signUp = async (email:string, password:string): Promise<SignUpAndSignInResponse> => {
+    // Sign up with email and password
+    const signUp = async (email:string, password:string): Promise<SupabaseResponse> => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
-        })
+        });
             
         if (error) {
             console.error('There was an error signing up: ', error);
@@ -97,39 +97,41 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
         }
 
         return { success: true, data };
-    }
+    };
 
-    // Sign in function to authenticate an existing user
-    const signIn = async (email:string, password:string): Promise<SignUpAndSignInResponse> => {
+    // Sign in with email and password
+    const signIn = async (email:string, password:string): Promise<SupabaseResponse> => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
-        })
+        });
+
         if (error) {
             console.error('There was an error signing in: ', error);
-            return { success: false, error }
+            return { success: false, error };
         }
-        return { success: true, data }
-    }
 
-    // Sign out function to log out the current user
-    const signOut = async (): Promise<SignUpAndSignInResponse> => {
+        return { success: true, data };
+    };
+
+    // Sign out
+    const signOut = async (): Promise<SupabaseResponse> => {
         const { error } = await supabase.auth.signOut();
         if (error) {
             console.error('There was an error signing out: ', error);
-            return { success: false, error }
+            return { success: false, error };
         }
 
-        return { success: true }
-    }
+        return { success: true };
+    };
 
     return (
         // Provide the authentication context to the component tree
-        <AuthContext.Provider value={{ session, signUp, signOut, signIn, user, loadingApp }}> 
+        <AuthContext.Provider value={{ session, signUp, signOut, signIn, user, isLoading }}> 
             {children}
         </AuthContext.Provider>
-    )
-}
+    );
+};
 
 // Custom hook to use the AuthContext
 export const useAuth = (): AuthContextType => {

@@ -4,7 +4,7 @@ import { FiEdit, FiTrash2, FiInfo } from "react-icons/fi";
 import NewTransaction from './NewTransaction';
 import userIcon from '../assets/user-icon.jpg'
 import { transaction, sharedAccount } from '../App';
-import { useAuth, UserProfile } from './Auth/AuthContext';
+import { useAuth, UserProfile } from '../auth/AuthContext';
 
 interface TransactionsProps {
     allTransactions: transaction[];
@@ -100,7 +100,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
 
                     {/* Add File Upload Button */}
                     <form>
-                        <button className='ml-2 p-2 h-10 bg-emerald-500 text-white rounded' onClick={handleButtonClick}>Upload Receipt</button>
+                        <button className='ml-2 p-2 h-10 bg-[#3B429F] text-white rounded' onClick={handleButtonClick}>Upload Receipt</button>
                         <input 
                             type='file' 
                             ref={inputRef}
@@ -313,6 +313,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                         sharedAccountDetails={sharedAccountDetails}
                         setPersonalTransactions={setPersonalTransactions}
                         setSharedTransactions={setSharedTransactions}
+                        isTransactionModalOpen={isTransactionModalOpen}
                     />
                 </div>
             )}
