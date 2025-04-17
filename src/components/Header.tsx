@@ -1,5 +1,5 @@
 import userIcon from '../assets/user-icon.jpg'
-import { useAuth } from './Auth/AuthContext';
+import { useAuth } from '../auth/AuthContext';
 import { useLocation } from 'react-router-dom';
 
 function Header() {

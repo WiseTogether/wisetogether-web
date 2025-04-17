@@ -4,7 +4,7 @@ import { RiMoneyCnyCircleLine } from "react-icons/ri";
 import { AiOutlineProfile } from "react-icons/ai";
 import { Link } from 'react-router-dom';
 import InvitationCard from './InvitationCard';
-import { useAuth } from './Auth/AuthContext';
+import { useAuth } from '../auth/AuthContext';
 import { createSharedAccount } from '../api/sharedAccountApi'
 import { transaction } from '../App';
 import PieChart from './PieChart';

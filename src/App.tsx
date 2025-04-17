@@ -5,14 +5,14 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Settings from './components/Settings';
-import Register from './components/Auth/Register';
-import Login from './components/Auth/Login';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
-import { useAuth, UserProfile } from './components/Auth/AuthContext';
+import Register from './auth/Register';
+import Login from './auth/Login';
+import ProtectedRoute from './auth/ProtectedRoute';
+import { useAuth, UserProfile } from './auth/AuthContext';
 import { useEffect } from 'react';
 import { fetchAllTransactionsById } from './api/transactionsApi'
 import { findSharedAccountByUserId } from './api/sharedAccountApi'
-import { findProfileByUserId } from './api/userApi';
+import { getUserProfile } from './api/userApi';
 
 export interface transaction {
   sharedAccountId?: string,
@@ -69,13 +69,13 @@ function App() {
               try {
                 const user = sharedAccount.user1Id === session.user.id ? 'user1' : 'user2'
                 if (user === 'user1') {
-                  const partnerDetails = await findProfileByUserId(sharedAccount.user2Id);
+                  const partnerDetails = await getUserProfile(sharedAccount.user2Id, session.access_token);
                   setPartnerProfile({
                     name: partnerDetails.name.split(' ')[0], // Get first name of partner
                     avatarUrl: partnerDetails.avatar
                   });
                 } else {
-                  const partnerDetails = await findProfileByUserId(sharedAccount.user1Id);
+                  const partnerDetails = await getUserProfile(sharedAccount.user1Id, session.access_token);
                   setPartnerProfile({
                       name: partnerDetails.name.split(' ')[0],
                       avatarUrl: partnerDetails.avatar
