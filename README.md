@@ -2,6 +2,8 @@
 
 WiseTogether is a front-end web application that helps couples manage their finances by tracking shared expenses. Built with TypeScript, React, and Tailwind CSS, it provides a user-friendly interface to track, split, and manage expenses together.
 
+**Server Repository**: [WiseTogether - Server](https://github.com/WiseTogether/wisetogether-server.git)
+
 ## Features
 
 - **Dashboard**: Displays a breakdown of expenses by **type** (personal vs shared), as well as a breakdown by **category** (e.g., groceries, rent, utilities, etc.).
@@ -29,7 +31,7 @@ npm install
 
 ### Environment Variables
 
-Before running the app locally, create a .env file in the root of your project and add the following:
+Before running the app locally, create a `.env.local` file in the root of your project and add the following:
 
 ```
 VITE_API_BASE_URL=backend_api_url
