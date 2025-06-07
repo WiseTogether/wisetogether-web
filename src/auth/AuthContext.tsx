@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { getUserProfile } from '../api/userApi';
 
 export interface AuthContextType {
@@ -46,7 +46,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
 
             // Fetch user profile
             if (session && session.user) {
-                const userProfile = await getUserProfile(session.user.id, session.access_token);
+                const userProfile = await getUserProfile(session.user.id);
                 const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' ')); // Get the first name
 
                 setUser({
@@ -66,7 +66,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
             
             // If session is valid, fetch and set user profile data
             if (session && session.user) {
-                getUserProfile(session.user.id, session.access_token).then(userProfile => {
+                getUserProfile(session.user.id).then(userProfile => {
                     const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
                     setUser({
                         name: displayName,
