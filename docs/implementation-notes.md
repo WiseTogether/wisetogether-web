@@ -13,7 +13,7 @@ This document outlines the reasoning and technical approach behind selected chan
 ### Implementation
 1. Created a centralized API client (`src/lib/apiClient.ts`):
    - Implemented a custom `ApiError` class for consistent error handling
-   - Created a `useApiClient` hook that integrates with `AuthContext` to access Supabase session
+   - Created an API request function in `AuthContext` to access Supabase session
    - Removed manual token passing in favor of automatic token injection from session
    - Added standardized error handling for authentication failures
 

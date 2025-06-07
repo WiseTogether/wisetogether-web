@@ -5,10 +5,9 @@ import { AiOutlineProfile } from "react-icons/ai";
 import { Link } from 'react-router-dom';
 import InvitationCard from './InvitationCard';
 import { useAuth } from '../auth/AuthContext';
-import { createSharedAccount } from '../api/sharedAccountApi'
+import { createSharedAccountApi } from '../api/sharedAccountApi'
 import { transaction } from '../App';
 import PieChart from './PieChart';
-
 
 interface DashboardProps {
   invitationLink: string;
@@ -24,6 +23,8 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
 
   const { session } = useAuth();
+  const { apiRequest } = useAuth()
+  const sharedAccountApi = createSharedAccountApi(apiRequest)
 
   // Effect to calculate personal and shared expenses based on all transactions
   useEffect(() => {
@@ -49,7 +50,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
       if (session && session.user) {
         try {
           // Create a shared account for the user
-          await createSharedAccount(session.user.id, uniqueCode);
+          await sharedAccountApi.createSharedAccount(session.user.id, uniqueCode);
         } catch (error) {
           console.error('Error while creating shared account:', error);
         }

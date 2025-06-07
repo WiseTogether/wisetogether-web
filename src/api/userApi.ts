@@ -1,18 +1,20 @@
-import { useApiClient } from '../lib/apiClient'
+import type { ApiConfig } from '../lib/baseApiClient'
 
-const apiClient = useApiClient()
+export function createUserApi(apiRequest: <T>(config: ApiConfig) => Promise<T>) {
+  return {
+    createUserProfile: async (userId: string, name: string) => {
+      return apiRequest({
+        method: 'POST',
+        url: '/profiles',
+        data: { user_id: userId, name },
+      })
+    },
 
-export const createUserProfile = async (userId: string, name: string) => {
-  return apiClient({
-    method: 'POST',
-    url: '/profiles',
-    data: { user_id: userId, name },
-  })
-}
-
-export const getUserProfile = async (userId: string) => {
-  return apiClient({
-    method: 'GET',
-    url: `/profiles/${userId}`,
-  })
+    getUserProfile: async (userId: string) => {
+      return apiRequest({
+        method: 'GET',
+        url: `/profiles/${userId}`,
+      })
+    }
+  }
 }

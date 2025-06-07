@@ -1,29 +1,29 @@
-import { useApiClient } from '../lib/apiClient'
+import type { ApiConfig } from '../lib/baseApiClient'
+import type { sharedAccount } from '../App'
 
-const apiClient = useApiClient()
-
-// Make a POST request to create a new shared account
-export const createSharedAccount = async (userId: string, uniqueCode: string) => {
-    return apiClient({
+export function createSharedAccountApi(apiRequest: <T>(config: ApiConfig) => Promise<T>) {
+  return {
+    createSharedAccount: async (userId: string, uniqueCode: string) => {
+      return apiRequest({
         method: 'POST',
         url: '/shared-accounts',
         data: { userId, uniqueCode },
-    })
-}
+      })
+    },
 
-// Make a GET request to fetch the shared account for the specified userId
-export const findSharedAccountByUserId = async (userId: string) => {
-    return apiClient({
+    findSharedAccountByUserId: async (userId: string): Promise<sharedAccount> => {
+      return apiRequest<sharedAccount>({
         method: 'GET',
         url: `/shared-accounts/${userId}`,
-    })
-}
+      })
+    },
 
-// Make a PATCH request to add a user to an existing shared account using a unique code
-export const addUserToSharedAccount = async (user2Id: string, uniqueCode: string) => {
-    return apiClient({
+    addUserToSharedAccount: async (user2Id: string, uniqueCode: string) => {
+      return apiRequest({
         method: 'PATCH',
         url: `/shared-accounts/accept-invite?code=${uniqueCode}`,
         data: { user2Id, timestamp: new Date().toISOString() },
-    })
+      })
+    }
+  }
 }

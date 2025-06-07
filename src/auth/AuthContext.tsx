@@ -1,7 +1,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { getUserProfile } from '../api/userApi';
+import { baseApiClient, type ApiConfig, ApiError } from '../lib/baseApiClient';
 
 export interface AuthContextType {
     session: Session | null;
@@ -10,6 +10,7 @@ export interface AuthContextType {
     signUp: (email:string, password:string) => Promise<SupabaseResponse>;
     signIn: (email:string, password:string) => Promise<SupabaseResponse>;
     signOut: () => Promise<SupabaseResponse>;
+    apiRequest: <T>(config: ApiConfig) => Promise<T>;
 }
 
 interface SupabaseResponse {
@@ -36,6 +37,14 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
+    // Create the API request function that uses the current session
+    const apiRequest = async <T,>(config: ApiConfig): Promise<T> => {
+        if (!session?.access_token) {
+            throw new ApiError('No access token available', 401);
+        }
+        return baseApiClient<T>({ ...config, accessToken: session.access_token });
+    };
+
     useEffect(() => {
         // Function to load the session and user profile
         const loadSession = async () => {
@@ -46,7 +55,10 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
 
             // Fetch user profile
             if (session && session.user) {
-                const userProfile = await getUserProfile(session.user.id);
+                const userProfile = await apiRequest({
+                    method: 'GET',
+                    url: `/profiles/${session.user.id}`,
+                });
                 const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' ')); // Get the first name
 
                 setUser({
@@ -66,7 +78,10 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
             
             // If session is valid, fetch and set user profile data
             if (session && session.user) {
-                getUserProfile(session.user.id).then(userProfile => {
+                apiRequest({
+                    method: 'GET',
+                    url: `/profiles/${session.user.id}`,
+                }).then(userProfile => {
                     const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
                     setUser({
                         name: displayName,
@@ -127,7 +142,15 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
 
     return (
         // Provide the authentication context to the component tree
-        <AuthContext.Provider value={{ session, signUp, signOut, signIn, user, isLoading }}> 
+        <AuthContext.Provider value={{ 
+            session, 
+            signUp, 
+            signOut, 
+            signIn, 
+            user, 
+            isLoading,
+            apiRequest 
+        }}> 
             {children}
         </AuthContext.Provider>
     );
@@ -137,7 +160,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
 export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
     if (!context) {
-        throw new Error('UserAuth must be used within an AuthContextProvider');
+        throw new Error('useAuth must be used within an AuthContextProvider');
     }
     return context;
 }

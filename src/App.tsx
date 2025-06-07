@@ -10,9 +10,9 @@ import Login from './auth/Login';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { useAuth, UserProfile } from './auth/AuthContext';
 import { useEffect } from 'react';
-import { fetchAllTransactionsById } from './api/transactionsApi'
-import { findSharedAccountByUserId } from './api/sharedAccountApi'
-import { getUserProfile } from './api/userApi';
+import { createTransactionsApi } from './api/transactionsApi'
+import { createSharedAccountApi } from './api/sharedAccountApi'
+import { createUserApi } from './api/userApi';
 
 export interface transaction {
   sharedAccountId?: string,
@@ -26,9 +26,10 @@ export interface transaction {
 }; 
 
 export interface sharedAccount {
-  id: string,
+  uuid: string,
   user1Id: string,
   user2Id?: string,
+  uniqueCode?: string,
 }
 
 function App() {
@@ -40,6 +41,10 @@ function App() {
   const [partnerProfile, setPartnerProfile] = useState<UserProfile|null>(null)
 
   const { session } = useAuth();
+  const { apiRequest } = useAuth()
+  const sharedAccountApi = createSharedAccountApi(apiRequest)
+  const transactionsApi = createTransactionsApi(apiRequest)
+  const userApi = createUserApi(apiRequest)
 
   // Fetch transactions and shared account details when the session changes
   useEffect(() => {
@@ -47,42 +52,46 @@ function App() {
     const fetchTransactions = async () => {
       if (session && session.user) {
         try {
-          let sharedAccount = null;
+          let sharedAccount:sharedAccount|null = null;
 
           // Attempt to fetch shared account details for the user
           try {
-            sharedAccount = await findSharedAccountByUserId(session.user.id);
+            sharedAccount = await sharedAccountApi.findSharedAccountByUserId(session.user.id);
 
             // Create an invitation link for the shared account
             const link = `${import.meta.env.VITE_APP_BASE_URL}/invite?code=${sharedAccount.uniqueCode}`
             setInvitationLink(link);
 
             // Set the shared account details in state
-            setSharedAccountDetails({ id: sharedAccount.uuid, user1Id: sharedAccount.user1Id })
+            setSharedAccountDetails({ uuid: sharedAccount.uuid, user1Id: sharedAccount.user1Id })
 
             // If there is a second user, set shared account details
             if (sharedAccount.user2Id) {
-              setSharedAccountDetails({ id: sharedAccount.uuid, user1Id: sharedAccount.user1Id, user2Id: sharedAccount.user2Id })
+              setSharedAccountDetails({ uuid: sharedAccount.uuid, user1Id: sharedAccount.user1Id, user2Id: sharedAccount.user2Id })
               setIsInvitedByPartner(true);
               
               // Fetch partner profile based on user1Id or user2Id
               try {
                 const user = sharedAccount.user1Id === session.user.id ? 'user1' : 'user2'
                 if (user === 'user1') {
-                  const partnerDetails = await getUserProfile(sharedAccount.user2Id, session.access_token);
+                  const partnerDetails = await userApi.getUserProfile(sharedAccount.user2Id);
                   setPartnerProfile({
-                    name: partnerDetails.name.split(' ')[0], // Get first name of partner
+                    name: partnerDetails.name.split(' ')[0],
                     avatarUrl: partnerDetails.avatar
                   });
                 } else {
-                  const partnerDetails = await getUserProfile(sharedAccount.user1Id, session.access_token);
-                  setPartnerProfile({
+                  try {
+                    const partnerDetails = await userApi.getUserProfile(sharedAccount.user1Id);
+                    setPartnerProfile({
                       name: partnerDetails.name.split(' ')[0],
                       avatarUrl: partnerDetails.avatar
-                  });
+                    });
+                  } catch (error: any) {
+                    console.error('Error fetching user1 profile:', error.message);
+                  }
                 }
-              } catch (error:any) {
-                  console.error('Error fetching partner profile: ', error.message);
+              } catch (error: any) {
+                console.error('Error fetching partner profile:', error.message);
               }
             }
           } catch (error:any) {
@@ -90,7 +99,7 @@ function App() {
           }
 
           // Fetch transactions for the current user and shared account (if any)
-          const transactions = await fetchAllTransactionsById(session.user.id, sharedAccount ? sharedAccount.uuid : null);
+          const transactions = await transactionsApi.fetchAllTransactionsById(session.user.id, sharedAccount ? sharedAccount.uuid : null);
           setAllTransactions(transactions.length > 0 ? transactions : []);
         } catch (error:any) {
           console.error('Error fetching transactions: ', error.message);
