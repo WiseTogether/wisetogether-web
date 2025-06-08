@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { transaction, sharedAccount } from '../App';
 import { IoClose } from "react-icons/io5";
 import { useAuth } from '../auth/AuthContext';
-import { addNewPersonalExpense, addNewSharedExpense } from '../api/transactionsApi';
+import { createTransactionsApi } from '../api/transactionsApi';
 
 interface NewTransactionProps {
     closeModal: () => void,
@@ -45,6 +45,8 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, 
     })
 
     const { session } = useAuth();
+    const { apiRequest } = useAuth()
+    const transactionsApi = createTransactionsApi(apiRequest)
 
     // Set the userId and sharedAccountId when session or sharedAccountDetails change
     useEffect(() => {
@@ -136,11 +138,11 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, 
                     category: newTransaction.category,
                     description: newTransaction.description,
                 }
-                await addNewPersonalExpense(personalExpense);
+                await transactionsApi.addNewPersonalExpense(personalExpense);
             }
             if (expenseType === 'shared') {
                 const sharedExpense = { 
-                    sharedAccountId: sharedAccountDetails?.id,
+                    sharedAccountId: sharedAccountDetails?.uuid,
                     userId: session?.user.id,
                     date: newTransaction.date,
                     amount: newTransaction.amount,
@@ -149,7 +151,7 @@ const NewTransaction: React.FC<NewTransactionProps> = ({ closeModal, modalType, 
                     splitType: newTransaction.splitType,
                     splitDetails: newTransaction.splitDetails,
                 }
-                await addNewSharedExpense(sharedExpense);
+                await transactionsApi.addNewSharedExpense(sharedExpense);
             }
         }
 

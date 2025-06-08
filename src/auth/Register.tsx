@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
-import { createUserProfile } from '../api/userApi';
-import { addUserToSharedAccount } from '../api/sharedAccountApi'
-
+import { createUserApi } from '../api/userApi';
+import { createSharedAccountApi } from '../api/sharedAccountApi'
 
 function Register() {
 
@@ -51,6 +50,10 @@ function Register() {
         event.preventDefault();
         setLoading(true);
 
+        const { apiRequest } = useAuth()
+        const userApi = createUserApi(apiRequest)
+        const sharedAccountApi = createSharedAccountApi(apiRequest)
+
         const params = new URLSearchParams(document.location.search); // Retrieve the URL parameters
         const uniqueCode = params.get('code'); // Extract 'code' from URL, if available
         
@@ -59,11 +62,11 @@ function Register() {
 
             if (result.success && result.data && result.data.user) {
                 // If sign-up is successful, create user profile
-                await createUserProfile(result.data.user.id, signUpForm.name)
+                await userApi.createUserProfile(result.data.user.id, signUpForm.name)
                 
                 // If there's a unique code, add the user to a shared account
                 if (uniqueCode) {
-                    await addUserToSharedAccount(result.data.user.id, uniqueCode)
+                    await sharedAccountApi.addUserToSharedAccount(result.data.user.id, uniqueCode)
                 }
 
                 navigate('/'); // Redirect to the dashboard after successful registration
