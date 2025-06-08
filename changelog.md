@@ -7,7 +7,7 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Added
-- Implemented edit transaction functionality [#5](https://github.com/WiseTogether/wisetogether-web/issues/5)
+- Implemented delete transaction functionality [#11](https://github.com/WiseTogether/wisetogether-web/issues/11)
 
 ---
 
@@ -21,3 +21,6 @@ All notable changes to the WiseTogether project are documented here.
 
 ### Changed
 - Refactored API authentication to use Supabase access tokens [#10](https://github.com/WiseTogether/wisetogether-web/issues/10) ([#20](https://github.com/WiseTogether/wisetogether-web/pull/20))
+
+### Added
+- Implemented edit transaction functionality [#5](https://github.com/WiseTogether/wisetogether-web/issues/5) ([#21](https://github.com/WiseTogether/wisetogether-web/pull/21))
