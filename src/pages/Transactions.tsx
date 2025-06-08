@@ -5,6 +5,7 @@ import { sharedAccount } from '../App';
 import { useAuth, UserProfile } from '../auth/AuthContext';
 import TransactionModal from '../components/transactions/TransactionModal';
 import TransactionList from '../components/transactions/TransactionList';
+import { createTransactionsApi } from '../api/transactionsApi';
 
 interface TransactionsProps {
     allTransactions: Transaction[];
@@ -20,7 +21,8 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
     const [expenseType, setExpenseType] = useState<string>('personal');
     const [activeTab, setActiveTab] = useState<string>('all');
 
-    const { session } = useAuth();
+    const { session, apiRequest } = useAuth();
+    const transactionsApi = createTransactionsApi(apiRequest);
 
     useEffect(() => {
         setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
@@ -49,6 +51,19 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
             setAllTransactions(updatedTransactions);
         }
         setModalMode(null);
+    };
+
+    const handleDeleteTransaction = async (transaction: Transaction) => {
+        if (!transaction.id) return;
+        
+        try {
+            await transactionsApi.deleteTransaction(transaction.id);
+            const updatedTransactions = allTransactions.filter(t => t.id !== transaction.id);
+            setAllTransactions(updatedTransactions);
+        } catch (error) {
+            console.error('Error deleting transaction:', error);
+            alert('Failed to delete transaction. Please try again.');
+        }
     };
 
     return (
@@ -89,6 +104,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                     <TransactionList
                         transactions={allTransactions}
                         onEdit={handleEditTransaction}
+                        onDelete={handleDeleteTransaction}
                         session={session}
                         partnerProfile={partnerProfile}
                         showTransactionType={true}
@@ -99,6 +115,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                     <TransactionList
                         transactions={personalTransactions}
                         onEdit={handleEditTransaction}
+                        onDelete={handleDeleteTransaction}
                         session={session}
                         partnerProfile={partnerProfile}
                     />
@@ -108,6 +125,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                     <TransactionList
                         transactions={sharedTransactions}
                         onEdit={handleEditTransaction}
+                        onDelete={handleDeleteTransaction}
                         session={session}
                         partnerProfile={partnerProfile}
                         showSplitDetails={true}

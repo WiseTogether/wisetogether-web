@@ -39,6 +39,7 @@ export interface TransactionFormProps {
 export interface TransactionListProps {
     transactions: Transaction[];
     onEdit: (transaction: Transaction) => void;
+    onDelete: (transaction: Transaction) => void;
     session: Session | null;
     partnerProfile: UserProfile | null;
     showTransactionType?: boolean;
@@ -49,6 +50,7 @@ export interface TransactionListProps {
 export interface TransactionRowProps {
     transaction: Transaction;
     onEdit: (transaction: Transaction) => void;
+    onDelete: (transaction: Transaction) => void;
     session: Session | null;
     partnerProfile: UserProfile | null;
     showTransactionType?: boolean;

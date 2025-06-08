@@ -4,6 +4,30 @@ This document outlines the reasoning and technical approach behind selected chan
 
 ---
 
+## Feature: Delete Transaction Functionality
+**Issue:** [#11](https://github.com/WiseTogether/wisetogether-web/issues/11)
+
+### Problem
+- No way to delete transactions from the UI
+- Missing API endpoint for transaction deletion
+
+### Implementation
+1. Added `deleteTransaction` endpoint in `src/api/transactionsApi.ts`:
+   - Implemented DELETE request to `/expenses/:id`
+   - Added proper error handling and type safety
+
+2. Enhanced Transaction Components:
+   - Added `onDelete` prop to `TransactionRowProps` and `TransactionListProps`
+   - Updated `TransactionRow` to handle delete with confirmation dialog
+   - Added `handleDeleteTransaction` to `Transactions` component for state management
+   - Implemented optimistic UI updates for better user experience
+
+### Notes
+- Delete operation requires user confirmation
+- UI updates immediately after successful deletion
+
+---
+
 ## Feature: Transaction Editing Functionality
 **Issue:** [#5](https://github.com/WiseTogether/wisetogether-web/issues/5)
 
