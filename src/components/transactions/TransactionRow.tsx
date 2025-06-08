@@ -61,7 +61,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
                 <div className='text-right w-25'>
                     {showSplitDetails && (
                         <p className='text-xs text-gray-400'>
-                            {transaction.userId === session?.user.id ? 'you paid' : `${partnerProfile?.name} paid` || 'your partner paid'}
+                            {transaction.userId === session?.user.id ? 
+                                'you paid' 
+                                : `${partnerProfile?.name ?? 'your partner'} paid`}
                         </p>
                     )}
                     <p>¥ {Number(transaction.amount).toLocaleString()}</p>
@@ -69,7 +71,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
                 {showSplitDetails && (
                     <div className='text-left'>
                         <p className='text-xs text-gray-400'>
-                            {transaction.userId !== session?.user.id ? 'you owe' : `${partnerProfile?.name} owes you` || 'your partner owes you'}
+                            {transaction.userId !== session?.user.id
+                                ? 'you owe'
+                                : `${partnerProfile?.name ?? 'your partner'} owes you`}
                         </p>
                         {transaction.userId === session?.user.id 
                             ? <p className='text-emerald-500'>¥ {Number(transaction.splitDetails?.user2_amount).toLocaleString()}</p>
