@@ -3,7 +3,7 @@ import { useState } from 'react'
 import './styles/App.css'
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
-import Transactions from './components/Transactions';
+import Transactions from './pages/Transactions';
 import Settings from './components/Settings';
 import Register from './auth/Register';
 import Login from './auth/Login';
@@ -13,17 +13,7 @@ import { useEffect } from 'react';
 import { createTransactionsApi } from './api/transactionsApi'
 import { createSharedAccountApi } from './api/sharedAccountApi'
 import { createUserApi } from './api/userApi';
-
-export interface transaction {
-  sharedAccountId?: string,
-  userId: string,
-  date:string,
-  amount:string,
-  category:string,
-  description?:string,
-  splitType?:string,
-  splitDetails?: { [key:string]:number }
-}; 
+import { Transaction } from './types/transaction';
 
 export interface sharedAccount {
   uuid: string,
@@ -32,9 +22,16 @@ export interface sharedAccount {
   uniqueCode?: string,
 }
 
+// Helper to format date as yyyy-MM-dd
+function formatDateToYMD(dateString: string): string {
+  const d = new Date(dateString)
+  if (isNaN(d.getTime())) return ''
+  return d.toISOString().split('T')[0]
+}
+
 function App() {
 
-  const [allTransactions, setAllTransactions] = useState<transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [invitationLink, setInvitationLink] = useState<string>('');
   const [isInvitedByPartner, setIsInvitedByPartner] = useState<boolean>(false);
   const [sharedAccountDetails, setSharedAccountDetails] = useState<sharedAccount|null>(null);
@@ -100,7 +97,7 @@ function App() {
 
           // Fetch transactions for the current user and shared account (if any)
           const transactions = await transactionsApi.fetchAllTransactionsById(session.user.id, sharedAccount ? sharedAccount.uuid : null);
-          setAllTransactions(transactions.length > 0 ? transactions : []);
+          setAllTransactions(transactions.length > 0 ? transactions.map(t => ({ ...t, date: formatDateToYMD(t.date) })) : []);
         } catch (error:any) {
           console.error('Error fetching transactions: ', error.message);
         }
@@ -118,7 +115,16 @@ function App() {
           <Route path='/invite' element={<Register />} />
           <Route path='/' element={<Layout />}>
             <Route index element={<ProtectedRoute><Dashboard invitationLink={invitationLink} setInvitationLink={setInvitationLink} isInvitedByPartner={isInvitedByPartner} allTransactions={allTransactions}/></ProtectedRoute>} /> {/* Default route */}
-            <Route path="transactions" element={<ProtectedRoute><Transactions allTransactions={allTransactions} setAllTransactions={setAllTransactions} sharedAccountDetails={sharedAccountDetails} partnerProfile={partnerProfile}/></ProtectedRoute>} />
+            <Route path="transactions" element={
+                <ProtectedRoute>
+                    <Transactions 
+                        allTransactions={allTransactions} 
+                        setAllTransactions={(transactions: Transaction[]) => setAllTransactions(transactions)} 
+                        sharedAccountDetails={sharedAccountDetails} 
+                        partnerProfile={partnerProfile}
+                    />
+                </ProtectedRoute>
+            } />
             <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<Register />} />
