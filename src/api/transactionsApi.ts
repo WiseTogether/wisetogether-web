@@ -38,6 +38,13 @@ export function createTransactionsApi(apiRequest: <T>(config: ApiConfig) => Prom
         url: `/expenses/${expenseId}`,
         data: expense,
       })
+    },
+
+    deleteTransaction: async (expenseId: string): Promise<void> => {
+      await apiRequest<void>({
+        method: 'DELETE',
+        url: `/expenses/${expenseId}`,
+      })
     }
   }
 }

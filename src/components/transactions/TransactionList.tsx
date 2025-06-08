@@ -4,6 +4,7 @@ import TransactionRow from "./TransactionRow";
 const TransactionList: React.FC<TransactionListProps> = ({
     transactions,
     onEdit,
+    onDelete,
     session,
     partnerProfile,
     showTransactionType = false,
@@ -29,6 +30,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                             key={index}
                             transaction={transaction}
                             onEdit={onEdit}
+                            onDelete={onDelete}
                             session={session}
                             partnerProfile={partnerProfile}
                             showTransactionType={showTransactionType}

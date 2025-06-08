@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/AuthContext";
 const TransactionRow: React.FC<TransactionRowProps> = ({
     transaction,
     onEdit,
+    onDelete,
     session,
     partnerProfile,
     showTransactionType = false,
@@ -12,6 +13,12 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
     showUserAvatar = false
 }) => {
     const { user } = useAuth();
+
+    const handleDelete = () => {
+        if (window.confirm('Are you sure you want to delete this transaction?')) {
+            onDelete(transaction);
+        }
+    };
 
     return (
         <tr>
@@ -87,7 +94,8 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
                         onClick={() => onEdit(transaction)}
                     />
                     <FiTrash2 
-                        className='ml-2 hover:cursor-pointer'
+                        className='ml-2 hover:cursor-pointer text-red-500'
+                        onClick={handleDelete}
                     />
                 </div>
             </td>
