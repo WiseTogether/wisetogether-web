@@ -3,81 +3,62 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
 import { createUserApi } from '../api/userApi';
-import { createSharedAccountApi } from '../api/sharedAccountApi'
+import { createSharedAccountApi } from '../api/sharedAccountApi';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { registerFormSchema, RegisterFormData } from '../types/auth';
+
 
 function Register() {
-
     const [loading, setLoading] = useState<boolean>(false);
-    const [signUpForm, setSignUpForm] = useState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-    })
-    const [errors, setErrors] = useState({
-        password: '',
-        confirmPassword: '',
-    });
+    const [error, setError] = useState<string>('');
 
     const { signUp, apiRequest } = useAuth();
     const navigate = useNavigate();
+    const userApi = createUserApi(apiRequest);
+    const sharedAccountApi = createSharedAccountApi(apiRequest);
 
-    // Handles changes in the form input fields
-    const handleChange = (event:React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = event.target;
-        const newErrors = { ...errors };
-
-        // Validate password length
-        if (name === 'password' && value.length < 6) {
-            newErrors.password = 'Please enter at least 6 digits.';
-        } else {
-            newErrors.password = '';
+    const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerFormSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
         }
+    });
 
-        // Validate password confirmation
-        if (name === 'confirmPassword' && value!= signUpForm.password) {
-            newErrors.confirmPassword = `Passwords don't match.`;
-        } else {
-            newErrors.confirmPassword = '';
-        }
-
-        setErrors(newErrors);
-        setSignUpForm({ ...signUpForm, [name]: value });
-    };
-
-    // Handles form submission
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const onSubmit = async (data: RegisterFormData) => {
         setLoading(true);
+        setError('');
 
-        const userApi = createUserApi(apiRequest)
-        const sharedAccountApi = createSharedAccountApi(apiRequest)
+        const params = new URLSearchParams(document.location.search);
+        const uniqueCode = params.get('code');
 
-        const params = new URLSearchParams(document.location.search); // Retrieve the URL parameters
-        const uniqueCode = params.get('code'); // Extract 'code' from URL, if available
-        
         try {
-            const result = await signUp(signUpForm.email, signUpForm.password); // Call signUp from AuthContext
+            const result = await signUp(data.email, data.password);
 
-            if (result.success && result.data && result.data.user) {
-                // If sign-up is successful, create user profile
-                await userApi.createUserProfile(result.data.user.id, signUpForm.name)
+            if (result.success && result.data?.user) {
+                // Create user profile
+                await userApi.createUserProfile(result.data.user.id, data.name);
                 
-                // If there's a unique code, add the user to a shared account
+                // Handle shared account if code exists
                 if (uniqueCode) {
-                    await sharedAccountApi.addUserToSharedAccount(result.data.user.id, uniqueCode)
+                    await sharedAccountApi.addUserToSharedAccount(result.data.user.id, uniqueCode);
                 }
 
-                navigate('/'); // Redirect to the dashboard after successful registration
+                navigate('/');
             } else {
-                console.error('Sign-up failed:', result)
+                setError('Failed to create account. Please try again.');
+                console.error('Sign-up failed:', result);
             }
         } catch (error) {
-            console.error('An error occured: ', error)
+            console.error('Registration error:', error);
+            setError('An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     return (
         <div className='w-full flex flex-col justify-center items-center'>
@@ -86,10 +67,11 @@ function Register() {
             {/* Google Sign Up Button */}
             <div className='w-2/3 flex justify-center items-center p-6'>
                 <button 
-                    type='submit' 
+                    type='button' 
                     className='flex items-center justify-center gap-4 w-3/4 py-2 px-4 rounded-md border-emerald-500 border-1 text-stone-500 hover:cursor-pointer'
                     disabled={loading}>
-                <FcGoogle />Sign up with Google</button>
+                    <FcGoogle />Sign up with Google
+                </button>
             </div>
 
             {/* OR separator */}
@@ -102,18 +84,18 @@ function Register() {
             {/* Sign Up Form */}
             <div className='w-2/3 flex flex-col justify-center items-center mb-6'>
                 <div className='w-3/4 border-solid border-black p-6'>
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
                         {/* Name Input */}
                         <div className='flex gap-2 justify-center items-center mb-6'>
                             <input
                                 className='border-solid border-gray-200 border-1 inset-shadow-xs p-2 w-full' 
                                 type='text'
-                                name='name'
-                                value={signUpForm.name}
+                                {...register('name')}
                                 placeholder='Full Name'
-                                required={true}
-                                onChange={handleChange}
                             />
+                            {errors.name && (
+                                <p className="text-red-500 text-xs w-full">{errors.name.message}</p>
+                            )}
                         </div>
 
                         {/* Email Input */}
@@ -121,12 +103,12 @@ function Register() {
                             <input
                                 className='border-solid border-gray-200 border-1 inset-shadow-xs p-2 w-full' 
                                 type='email'
-                                name='email'
-                                value={signUpForm.email}
+                                {...register('email')}
                                 placeholder='Email'
-                                required={true}
-                                onChange={handleChange}
                             />
+                            {errors.email && (
+                                <p className="text-red-500 text-xs w-full">{errors.email.message}</p>
+                            )}
                         </div>
 
                         {/* Password Input */}
@@ -134,13 +116,12 @@ function Register() {
                             <input 
                                 className='border-solid border-gray-200 border-1 inset-shadow-xs p-2 w-full' 
                                 type='password'
-                                name='password'
-                                value={signUpForm.password}
+                                {...register('password')}
                                 placeholder='Password'
-                                required={true}
-                                onChange={handleChange}
                             />
-                            {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}                    
+                            {errors.password && (
+                                <p className="text-red-500 text-xs w-full">{errors.password.message}</p>
+                            )}
                         </div>
 
                         {/* Confirm Password Input */}
@@ -148,14 +129,17 @@ function Register() {
                             <input 
                                 className='border-solid border-gray-200 border-1 inset-shadow-xs p-2 w-full' 
                                 type='password'
-                                name='confirmPassword'
-                                value={signUpForm.confirmPassword}
+                                {...register('confirmPassword')}
                                 placeholder='Confirm Password'
-                                required={true}
-                                onChange={handleChange}
                             />
-                            {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword}</p>}          
+                            {errors.confirmPassword && (
+                                <p className="text-red-500 text-xs w-full">{errors.confirmPassword.message}</p>
+                            )}
                         </div>
+
+                        {error && (
+                            <p className="text-red-500 text-xs text-center mb-4">{error}</p>
+                        )}
 
                         {/* Submit Button */}
                         <div className='flex justify-center items-center w-full'>
@@ -163,15 +147,15 @@ function Register() {
                                 type='submit' 
                                 className='w-full py-2 px-4 rounded-md text-white bg-emerald-500 hover:cursor-pointer'
                                 disabled={loading}>
-                            Create Account</button>
+                                {loading ? 'Creating account...' : 'Create Account'}
+                            </button>
                         </div>
                     </form>
                 </div>
 
-                {/* Link to Login page if the user already has an account */}
+                {/* Link to Login page */}
                 <Link to='/login' className='text-emerald-500 text-xs text-center underline'>Do you already have an account? Sign in</Link>
             </div>
-            
         </div>
     )
 }

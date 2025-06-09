@@ -103,3 +103,38 @@ This document outlines the reasoning and technical approach behind selected chan
 
 ---
 
+## Feature: Form Validation with Zod
+
+**Issue:** [#6](https://github.com/WiseTogether/wisetogether-web/issues/6)
+
+### Problem
+- Form validation was implemented manually in each component
+- Validation rules were scattered and inconsistent
+- No type safety for form data
+- Duplicate validation logic across components
+
+### Implementation
+1. Added dependencies:
+   - `zod` for schema validation
+   - `@hookform/resolvers` for Zod integration with React Hook Form
+   - `react-hook-form` for form state management
+
+2. Created centralized validation schemas:
+   - Transaction form schema in `src/types/transaction.ts`
+   - Auth form schemas in `src/types/auth.ts`:
+
+3. Updated form components:
+   - `TransactionForm`: Implemented Zod validation for transaction data
+   - `Login`: Implemented Zod validatio with proper error messages
+   - `Register`: Implemented Zod validatio with password confirmation check
+
+### Notes
+- Form validation is now centralized and consistent
+- Type safety is enforced through Zod schemas
+- Error messages are more user-friendly
+- Split details calculations are more robust
+- Form state management is more efficient
+- Auth forms now have proper validation and error handling
+
+---
+
