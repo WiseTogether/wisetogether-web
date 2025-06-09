@@ -30,6 +30,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
     }, [allTransactions]);
 
     const handleAddTransaction = () => {
+        setExpenseType(activeTab === 'shared' ? 'shared' : 'personal');
         setModalMode({ type: 'add' });
     };
 

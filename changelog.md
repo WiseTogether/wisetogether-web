@@ -7,7 +7,8 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Added
-- Implemented delete transaction functionality [#11](https://github.com/WiseTogether/wisetogether-web/issues/11)
+- Fixed incorrect label assignment for newly created transactions [#7](https://github.com/WiseTogether/wisetogether-web/issues/7)
+- Added fallback handling for cases where partner is undefined [#8](https://github.com/WiseTogether/wisetogether-web/issues/8)
 
 ---
 
@@ -24,3 +25,4 @@ All notable changes to the WiseTogether project are documented here.
 
 ### Added
 - Implemented edit transaction functionality [#5](https://github.com/WiseTogether/wisetogether-web/issues/5) ([#21](https://github.com/WiseTogether/wisetogether-web/pull/21))
+- Implemented delete transaction functionality [#11](https://github.com/WiseTogether/wisetogether-web/issues/11) ([#21](https://github.com/WiseTogether/wisetogether-web/pull/22))

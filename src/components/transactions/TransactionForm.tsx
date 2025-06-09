@@ -59,7 +59,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 splitType: 'equal',
                 splitDetails: { 'user1_amount': 0, 'user2_amount': 0 },
             });
-            setExpenseType('personal');
         }
     }, [mode]);
 

@@ -79,3 +79,27 @@ This document outlines the reasoning and technical approach behind selected chan
 
 ---
 
+## Fix: Transaction Labels and Partner Fallback
+**Issues:** [#7](https://github.com/WiseTogether/wisetogether-web/issues/7), [#8](https://github.com/WiseTogether/wisetogether-web/issues/8)
+
+### Problems
+- New transactions are assigned incorrect labels
+- Shared transactions displayed "undefined owes you" when partner name was missing
+
+### Implementation
+1. Fixed transaction form initialization:
+   - Removed hardcoded `setExpenseType('personal')` in `TransactionForm`
+   - Updated `handleAddTransaction` in `Transactions` to set expense type based on active tab
+   - Form now opens with correct tab (shared/personal) based on context
+
+2. Added partner name fallback:
+   - Updated string concatenation in `TransactionRow` to use nullish coalescing
+   - Changed `${partnerProfile?.name} owes you` to `${partnerProfile?.name ?? 'your partner'} owes you`
+   - Ensures consistent display even when partner data is missing
+
+### Notes
+- Improved user experience by maintaining context between views
+- Enhanced error resilience with proper fallbacks
+
+---
+

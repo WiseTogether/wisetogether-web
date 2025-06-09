@@ -19,7 +19,7 @@ function Register() {
         confirmPassword: '',
     });
 
-    const { signUp } = useAuth();
+    const { signUp, apiRequest } = useAuth();
     const navigate = useNavigate();
 
     // Handles changes in the form input fields
@@ -50,7 +50,6 @@ function Register() {
         event.preventDefault();
         setLoading(true);
 
-        const { apiRequest } = useAuth()
         const userApi = createUserApi(apiRequest)
         const sharedAccountApi = createSharedAccountApi(apiRequest)
 
