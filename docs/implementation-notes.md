@@ -125,8 +125,8 @@ This document outlines the reasoning and technical approach behind selected chan
 
 3. Updated form components:
    - `TransactionForm`: Implemented Zod validation for transaction data
-   - `Login`: Implemented Zod validatio with proper error messages
-   - `Register`: Implemented Zod validatio with password confirmation check
+   - `Login`: Implemented Zod validation with proper error messages
+   - `Register`: Implemented Zod validation with password confirmation check
 
 ### Notes
 - Form validation is now centralized and consistent
