@@ -1,6 +1,7 @@
 import { sharedAccount } from "@/App";
 import { Session } from '@supabase/supabase-js';
 import { UserProfile } from '../auth/AuthContext';
+import { z } from 'zod';
 
 export interface Transaction {
     id?: string;
@@ -70,3 +71,22 @@ export interface TransactionModalProps {
     sharedAccountDetails: sharedAccount | null;
     onTransactionUpdate: (newTransaction: Transaction) => void;
 }
+
+// Zod schemas for validation
+export const transactionFormSchema = z.object({
+    date: z.string().min(1, 'Date is required'),
+    amount: z.string()
+        .min(1, 'Amount is required')
+        .regex(/^\d*\.?\d*$/, 'Please enter a valid amount with no commas, letters, or symbols'),
+    category: z.string()
+        .min(1, 'Category is required')
+        .refine(val => val !== '-- Select Category --', 'Please select a category'),
+    description: z.string().optional(),
+    splitType: z.enum(['equal', 'percentage', 'custom']).optional(),
+    splitDetails: z.object({
+        user1_amount: z.number().min(0).optional(),
+        user2_amount: z.number().min(0).optional()
+    }).optional(),
+});
+
+export type TransactionFormData = z.infer<typeof transactionFormSchema>;

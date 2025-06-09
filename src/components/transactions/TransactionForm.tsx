@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Transaction, TransactionFormErrors, TransactionFormProps } from '../../types/transaction';
+import { TransactionFormProps, transactionFormSchema, TransactionFormData } from '../../types/transaction';
 import { useAuth } from '../../auth/AuthContext';
 import { createTransactionsApi } from '../../api/transactionsApi';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
     mode,
@@ -11,23 +13,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     sharedAccountDetails,
     onTransactionUpdate
 }) => {
-    const [newTransaction, setNewTransaction] = useState<Transaction>(() =>
-        mode.type === 'edit' && mode.transaction ? mode.transaction : {
-            sharedAccountId: '',
-            userId: '',
+    const { register, handleSubmit, setValue, getValues, formState: { errors }, reset } = useForm<TransactionFormData>({
+        resolver: zodResolver(transactionFormSchema),
+        defaultValues: {
             date: new Date().toISOString().split('T')[0],
             amount: '',
             category: '-- Select Category --',
-            description: undefined,
+            description: '',
             splitType: 'equal',
-            splitDetails: { 'user1_amount': 0, 'user2_amount': 0 },
+            splitDetails: { user1_amount: 0, user2_amount: 0 }
         }
-    );
-
-    const [errors, setErrors] = useState<TransactionFormErrors>({
-        date: '',
-        amount: '',
-        category: '',
     });
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -44,113 +39,101 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
     useEffect(() => {
         if (mode.type === 'edit' && mode.transaction) {
-            const localDate = new Date(mode.transaction.date).toISOString().split('T')[0];
-            setNewTransaction({ ...mode.transaction, date: localDate });
+            reset({
+                date: mode.transaction.date,
+                amount: mode.transaction.amount,
+                category: mode.transaction.category,
+                description: mode.transaction.description || '',
+                splitType: mode.transaction.splitType || 'equal',
+                splitDetails: mode.transaction.splitDetails || { user1_amount: 0, user2_amount: 0 }
+            });
             setExpenseType(mode.transaction.sharedAccountId ? 'shared' : 'personal');
-        }
-        if (mode.type === 'add') {
-            setNewTransaction({
-                sharedAccountId: '',
-                userId: '',
+        } else {
+            reset({
                 date: new Date().toISOString().split('T')[0],
                 amount: '',
                 category: '-- Select Category --',
-                description: undefined,
+                description: '',
                 splitType: 'equal',
-                splitDetails: { 'user1_amount': 0, 'user2_amount': 0 },
+                splitDetails: { user1_amount: 0, user2_amount: 0 }
             });
         }
-    }, [mode]);
-
-    useEffect(() => {
-        if (session?.user) {
-            setNewTransaction(prev => ({
-                ...prev,
-                userId: session.user.id,
-                ...(sharedAccountDetails && { sharedAccountId: sharedAccountDetails.uuid })
-            }));
-        }
-    }, [session, sharedAccountDetails]);
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = event.target;
-
-        if (name === 'amount' && (/[^0-9.]/.test(value))) {
-            setErrors(prev => ({ ...prev, amount: 'Please enter an amount with no commas, letters, or symbols.' }));
-        } else {
-            setErrors(prev => ({ ...prev, amount: '' }));
-        }
-
-        setNewTransaction(prev => ({ ...prev, [name]: value }));
-    };
+    }, [mode, reset]);
 
     const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>, user: string) => {
         const { value } = event.target;
+        const currentSplitType = getValues('splitType');
+        const currentSplitDetails = getValues('splitDetails') || { user1_amount: 0, user2_amount: 0 };
 
-        if (newTransaction.splitType === 'percentage') {
+        if (currentSplitType === 'percentage') {
             if (isNaN(Number(value)) || Number(value) < 0 || Number(value) > 100) return;
 
-            const updatedSplitDetails = { ...newTransaction.splitDetails, [user + '_amount']: Number(value) };
-            user === 'user1' 
-                ? updatedSplitDetails.user2_amount = (100 - Number(value))
-                : updatedSplitDetails.user1_amount = (100 - Number(value));
+            const updatedSplitDetails = { ...currentSplitDetails };
+            if (user === 'user1') {
+                updatedSplitDetails.user1_amount = Number(value);
+                updatedSplitDetails.user2_amount = 100 - Number(value);
+            } else {
+                updatedSplitDetails.user2_amount = Number(value);
+                updatedSplitDetails.user1_amount = 100 - Number(value);
+            }
 
-            setNewTransaction(prev => ({ ...prev, splitDetails: updatedSplitDetails }));
-        } else if (newTransaction.splitType === 'custom') {
-            const amount = Number(newTransaction.amount);
+            setValue('splitDetails', updatedSplitDetails);
+        } else if (currentSplitType === 'custom') {
+            const amount = Number(getValues('amount'));
             if (isNaN(Number(value)) || Number(value) < 0 || Number(value) > amount) return;
 
-            const updatedSplitDetails = { ...newTransaction.splitDetails, [user + '_amount']: Number(value) };
-            user === 'user1'
-                ? updatedSplitDetails.user2_amount = (amount - Number(value))
-                : updatedSplitDetails.user1_amount = (amount - Number(value));
+            const updatedSplitDetails = { ...currentSplitDetails };
+            if (user === 'user1') {
+                updatedSplitDetails.user1_amount = Number(value);
+                updatedSplitDetails.user2_amount = amount - Number(value);
+            } else {
+                updatedSplitDetails.user2_amount = Number(value);
+                updatedSplitDetails.user1_amount = amount - Number(value);
+            }
 
-            setNewTransaction(prev => ({ ...prev, splitDetails: updatedSplitDetails }));
+            setValue('splitDetails', updatedSplitDetails);
         }
     };
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const newErrors = { ...errors };
-
-        !newTransaction.date ? newErrors.date = 'Date is required' : newErrors.date = '';
-        !newTransaction.amount ? newErrors.amount = 'Amount is required' : newErrors.amount = '';
-        newTransaction.category === '-- Select Category --' ? newErrors.category = 'Category is required' : newErrors.category = '';
-
-        setErrors(newErrors);
-
-        if (newErrors.date || newErrors.amount || newErrors.category) return;
+    const onSubmit = async (data: TransactionFormData) => {
+        if (!session?.user?.id) {
+            setError('User session not found');
+            return;
+        }
 
         setIsLoading(true);
         setError(null);
 
         try {
             if (mode.type === 'edit' && mode.transaction?.id) {
-                const updatedTransaction = await transactionsApi.editTransaction(mode.transaction.id, newTransaction);
+                const updatedTransaction = await transactionsApi.editTransaction(mode.transaction.id, {
+                    ...data,
+                    userId: session.user.id
+                });
                 if (updatedTransaction) {
                     onTransactionUpdate(updatedTransaction);
                 }
-            } else if (mode.type === 'add' && session?.user) {
+            } else if (mode.type === 'add') {
                 let response;
                 if (expenseType === 'personal') {
                     const personalExpense = {
                         userId: session.user.id,
-                        date: newTransaction.date,
-                        amount: newTransaction.amount,
-                        category: newTransaction.category,
-                        description: newTransaction.description,
+                        date: data.date,
+                        amount: data.amount,
+                        category: data.category,
+                        description: data.description,
                     };
                     response = await transactionsApi.addNewPersonalExpense(personalExpense);
                 } else if (expenseType === 'shared') {
                     const sharedExpense = {
                         sharedAccountId: sharedAccountDetails?.uuid,
                         userId: session.user.id,
-                        date: newTransaction.date,
-                        amount: newTransaction.amount,
-                        category: newTransaction.category,
-                        description: newTransaction.description,
-                        splitType: newTransaction.splitType,
-                        splitDetails: newTransaction.splitDetails,
+                        date: data.date,
+                        amount: data.amount,
+                        category: data.category,
+                        description: data.description,
+                        splitType: data.splitType,
+                        splitDetails: data.splitDetails,
                     };
                     response = await transactionsApi.addNewSharedExpense(sharedExpense);
                 }
@@ -168,7 +151,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className='space-y-4 w-full flex flex-col justify-center items-center mb-6'>
                 {/* Date Input */}
                 <div className='flex gap-2 w-4/5'>
@@ -177,12 +160,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                         <input
                             type='date'
                             id='date'
-                            name='date'
+                            {...register('date')}
                             className='border-solid border-gray-200 border-1 inset-shadow-xs p-1 mr-8'
-                            value={newTransaction.date}
-                            onChange={handleChange}
                         />
-                        {errors.date && <p className="text-red-500 text-xs">{errors.date}</p>}
+                        {errors.date && <p className="text-red-500 text-xs">{errors.date.message}</p>}
                     </div>
                 </div>
 
@@ -193,13 +174,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                         <input
                             type='text'
                             id='amount'
-                            name='amount'
+                            {...register('amount')}
                             className='border-solid border-gray-200 border-1 inset-shadow-xs p-1 w-20'
-                            value={newTransaction.amount}
                             placeholder='0'
-                            onChange={handleChange}
                         />
-                        {errors.amount && <p className="text-red-500 text-xs">{errors.amount}</p>}
+                        {errors.amount && <p className="text-red-500 text-xs">{errors.amount.message}</p>}
                     </div>
                 </div>
 
@@ -212,10 +191,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                                 <div>
                                     <input
                                         type='radio'
-                                        name='splitType'
+                                        {...register('splitType')}
                                         value='equal'
-                                        checked={newTransaction.splitType === 'equal'}
-                                        onChange={handleChange}
                                         className='border-solid border-gray-200 border-1 inset-shadow-xs p-1'
                                     />
                                     <label htmlFor='equal'> Equal</label>
@@ -224,22 +201,20 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                                 <div>
                                     <input
                                         type='radio'
-                                        name='splitType'
+                                        {...register('splitType')}
                                         value='percentage'
-                                        onChange={handleChange}
                                         className='border-solid border-gray-200 border-1 inset-shadow-xs p-1'
                                     />
                                     <label htmlFor='percentage'> Percentage</label>
                                 </div>
 
-                                {newTransaction.splitType === 'percentage' && (
+                                {getValues('splitType') === 'percentage' && (
                                     <div className='flex items-center m-2'>
                                         <input
                                             type='text'
                                             id='user1-amount'
-                                            name='user1-amount'
                                             className='border-b border-solid border-gray-200 p-1 w-15 mr-2'
-                                            value={newTransaction.splitDetails?.user1_amount}
+                                            value={getValues('splitDetails.user1_amount')}
                                             onChange={(e) => handleAmountChange(e, 'user1')}
                                         />
                                         <p className='mr-10'>%</p>
@@ -247,9 +222,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                                         <input
                                             type='text'
                                             id='user2-amount'
-                                            name='user2-amount'
                                             className='border-b border-solid border-gray-200 p-1 w-15 mr-2'
-                                            value={newTransaction.splitDetails?.user2_amount}
+                                            value={getValues('splitDetails.user2_amount')}
                                             onChange={(e) => handleAmountChange(e, 'user2')}
                                         />
                                         <p>%</p>
@@ -259,23 +233,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                                 <div>
                                     <input
                                         type='radio'
-                                        name='splitType'
+                                        {...register('splitType')}
                                         value='custom'
-                                        onChange={handleChange}
                                         className='border-solid border-gray-200 border-1 inset-shadow-xs p-1'
                                     />
                                     <label htmlFor='custom'> Custom</label>
                                 </div>
 
-                                {newTransaction.splitType === 'custom' && (
+                                {getValues('splitType') === 'custom' && (
                                     <div className='flex items-center mt-2 mb-2'>
                                         <p className='mr-2'>¥</p>
                                         <input
                                             type='text'
                                             id='user1-amount'
-                                            name='user1-amount'
                                             className='border-b border-solid border-gray-200 p-1 w-20 mr-5'
-                                            value={newTransaction.splitDetails?.user1_amount}
+                                            value={getValues('splitDetails.user1_amount')}
                                             onChange={(e) => handleAmountChange(e, 'user1')}
                                         />
 
@@ -283,10 +255,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                                         <input
                                             type='text'
                                             id='user2-amount'
-                                            name='user2-amount'
                                             className='border-b border-solid border-gray-200 p-1 w-20'
-                                                value={newTransaction.splitDetails?.user2_amount}
-                                                onChange={(e) => handleAmountChange(e, 'user2')}
+                                            value={getValues('splitDetails.user2_amount')}
+                                            onChange={(e) => handleAmountChange(e, 'user2')}
                                         />
                                     </div>
                                 )}
@@ -301,10 +272,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                     <div className='w-full'>
                         <select
                             id='category'
-                            name='category'
+                            {...register('category')}
                             className='border-solid border-gray-200 border-1 inset-shadow-xs p-1 w-59'
-                            value={newTransaction.category}
-                            onChange={handleChange}
                         >
                             <option value='-- Select Category --'>-- Select Category --</option>
                             {categories.map((category) => (
@@ -313,7 +282,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                                 </option>
                             ))}
                         </select>
-                        {errors.category && <p className="text-red-500 text-xs">{errors.category}</p>}
+                        {errors.category && <p className="text-red-500 text-xs">{errors.category.message}</p>}
                     </div>
                 </div>
 
@@ -322,12 +291,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                     <label htmlFor='description' className='w-2/5 text-right'>Description: </label>
                     <div className='w-full'>
                         <textarea
-                            name='description'
+                            {...register('description')}
                             cols={25}
                             className='border-solid border-gray-200 border-1 inset-shadow-xs p-1'
-                            value={newTransaction.description ?? ''}
                             placeholder='(Optional)'
-                            onChange={handleChange}
                         ></textarea>
                     </div>
                 </div>
