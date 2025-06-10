@@ -143,7 +143,7 @@ This document outlines the reasoning and technical approach behind selected chan
 **Issue:** [#9](https://github.com/WiseTogether/wisetogether-web/issues/9)
 
 ### Problem
-- Google OAuth button exists in the UI but doesn’t perform any logic or redirect to Supabase OAuth.
+- Google OAuth button exists in the UI but doesn't perform any logic or redirect to Supabase OAuth.
 
 ### Implementation
 1. AuthContext.tsx
@@ -181,12 +181,12 @@ This document outlines the reasoning and technical approach behind selected chan
 
 ### Problem
 - Unhandled rendering or network errors can crash the UI or fail silently. 
-- There’s no centralized error handling for the app or for API failures.
+- There's no centralized error handling for the app or for API failures.
 
 ### Implementation
 1. Global Error Boundary
    - Created `ErrorBoundary.tsx` to catch JavaScript errors in the component tree.
-   - Provides a “Refresh Page” button and supports custom fallback components via props.
+   - Provides a "Refresh Page" button and supports custom fallback components via props.
    - Wrapped the entire app in `ErrorBoundary` from `main.tsx` to catch render errors outside the router and auth context.
 
 2. Reusable Fallback UI
@@ -207,5 +207,38 @@ This document outlines the reasoning and technical approach behind selected chan
 ### Notes
 - Unexpected errors are caught and displayed using a global UI fallback.
 - API errors are handled consistently and logged or surfaced to the user via a toast.
+
+---
+
+## Fix: Loading States and Premature UI Prevention
+
+**Issue:** [#13](https://github.com/WiseTogether/wisetogether-web/issues/13)
+
+### Problem
+- UI components were rendering before data fetching completed
+- Inconsistent loading states across the application
+- No visual feedback during data processing
+- Potential for showing incomplete or incorrect data
+
+### Implementation
+1. Consistent Loading States
+   - Integrated `react-spinners` with `FadeLoader` for uniform feedback
+   - Applied at auth (AuthContext), app (App.tsx), and component levels
+
+2. Protected Route Enhancement
+   - `ProtectedRoute` now shows a loader during auth checks
+   - Prevents premature rendering and improves user feedback
+
+3. Improved Data Fetching
+   - Introduced `isDataLoading` in `App.tsx` for initial loads
+   - Added loaders for transactions and dashboard expense calculations
+   - Enhanced error handling and state management
+
+4. Component-Level Feedback
+   - Loaders for filtering, calculations, and modal API interactions
+
+### Notes
+- Loading states are now consistent across the application
+- UI components only render when data is ready
 
 ---
