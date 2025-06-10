@@ -7,6 +7,7 @@ import TransactionModal from '../components/transactions/TransactionModal';
 import TransactionList from '../components/transactions/TransactionList';
 import { createTransactionsApi } from '../api/transactionsApi';
 import { FadeLoader } from 'react-spinners';
+import { showErrorToast, showSuccessToast } from '../utils/toastNotifications';
 
 interface TransactionsProps {
     allTransactions: Transaction[];
@@ -46,18 +47,24 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
     };
 
     const handleTransactionUpdate = async (newTransaction: Transaction) => {
-        if (modalMode?.type === 'edit' && modalMode.transaction?.id) {
-            // For edits, update the specific transaction
-            const updatedTransactions = allTransactions.map(t => 
-                t.id === modalMode.transaction!.id ? newTransaction : t
-            );
-            setAllTransactions(updatedTransactions);
-        } else if (modalMode?.type === 'add') {
-            // For adds, prepend the new transaction
-            const updatedTransactions = [newTransaction, ...allTransactions];
-            setAllTransactions(updatedTransactions);
+        try {
+            if (modalMode?.type === 'edit' && modalMode.transaction?.id) {
+                // For edits, update the specific transaction
+                const updatedTransactions = allTransactions.map(t => 
+                    t.id === modalMode.transaction!.id ? newTransaction : t
+                );
+                setAllTransactions(updatedTransactions);
+                showSuccessToast('Transaction updated successfully');
+            } else if (modalMode?.type === 'add') {
+                // For adds, prepend the new transaction
+                const updatedTransactions = [newTransaction, ...allTransactions];
+                setAllTransactions(updatedTransactions);
+                showSuccessToast('Transaction added successfully');
+            }
+            setModalMode(null);
+        } catch (error) {
+            showErrorToast('Failed to update transaction');
         }
-        setModalMode(null);
     };
 
     const handleDeleteTransaction = async (transaction: Transaction) => {
@@ -67,9 +74,9 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
             await transactionsApi.deleteTransaction(transaction.id);
             const updatedTransactions = allTransactions.filter(t => t.id !== transaction.id);
             setAllTransactions(updatedTransactions);
+            showSuccessToast('Transaction deleted successfully');
         } catch (error) {
-            console.error('Error deleting transaction:', error);
-            alert('Failed to delete transaction. Please try again.');
+            showErrorToast('Failed to delete transaction');
         }
     };
 

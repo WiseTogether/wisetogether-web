@@ -6,7 +6,7 @@ import { createSharedAccountApi } from '../api/sharedAccountApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { registerFormSchema, RegisterFormData } from '../types/auth';
-import { handleApiError, showSuccessMessage } from '../utils/errorHandler';
+import { showErrorToast, showSuccessToast } from '../utils/toastNotifications';
 
 function Register() {
     const [loading, setLoading] = useState<boolean>(false);
@@ -23,10 +23,10 @@ function Register() {
                 try {
                     await sharedAccountApi.addUserToSharedAccount(session.user.id, pendingSharedAccountCode);
                     setPendingSharedAccountCode(null);
-                    showSuccessMessage('Successfully joined shared account!');
+                    showSuccessToast('Successfully joined shared account!');
                     navigate('/');
                 } catch (error) {
-                    handleApiError(error, 'Failed to join shared account');
+                    showErrorToast('Failed to join shared account');
                 }
             }
         };
@@ -49,10 +49,10 @@ function Register() {
 
             const result = await signInWithGoogle(redirectTo);
             if (!result.success) {
-                handleApiError(new Error('Failed to sign in with Google'));
+                showErrorToast('Failed to sign in with Google');
             }
         } catch (error) {
-            handleApiError(error, 'An unexpected error occurred during Google sign-in');
+            showErrorToast('An unexpected error occurred during Google sign-in');
         } finally {
             setLoading(false);
         }
@@ -82,14 +82,14 @@ function Register() {
                     // Store the code and wait for session to be available
                     setPendingSharedAccountCode(uniqueCode);
                 } else {
-                    showSuccessMessage('Account created successfully!');
+                    showSuccessToast('Account created successfully!');
                     navigate('/');
                 }
             } else {
-                handleApiError(new Error('Failed to create account'));
+                showErrorToast('Failed to create account');
             }
         } catch (error) {
-            handleApiError(error, 'An unexpected error occurred during registration');
+            showErrorToast('An unexpected error occurred during registration');
         } finally {
             setLoading(false);
         }

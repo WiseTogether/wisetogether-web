@@ -242,3 +242,28 @@ This document outlines the reasoning and technical approach behind selected chan
 - UI components only render when data is ready
 
 ---
+
+## Feature: Toast Notifications for Actions
+
+**Issue:** [#14](https://github.com/WiseTogether/wisetogether-web/issues/14)
+
+### Problem
+- No immediate feedback when performing key actions (e.g., submitting a transaction)
+- Error messages shown via alerts or console logs
+
+### Implementation
+1. Toast Notifications
+   - Renamed `errorHandler.ts` to `toastNotifications.ts` for clarity and consistency
+   - Integrated toast notifications for all key user actions (e.g., create, update, delete)
+   - Added both success and error toast messages throughout the app
+
+2. Component Updates
+   - Updated `Transactions` and `TransactionForm` components with toast notifications
+   - Updated `Login` and `Register` components to use the new toastNotifications utility
+   - Updated `InvitationCard` component to use toast notifications instead of alerts
+
+### Notes
+- Users now receive immediate feedback for all key actions
+- The `baseApiClient` continues to handle API error parsing and formatting behind the scenes
+
+---
