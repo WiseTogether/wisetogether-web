@@ -295,3 +295,17 @@ This document outlines the reasoning and technical approach behind selected chan
 - Improved performance and maintainability
 
 ---
+
+## Refactor: Extract CTA Cards from Dashboard
+
+**Issue:** [#17](https://github.com/WiseTogether/wisetogether-web/issues/17)
+
+### Problem
+- `Dashboard.tsx` includes CTA cards markup mixed with other UI, reducing clarity and reusability
+
+### Implementation
+1. Created reusable `CTACard` component with props for icon, text, styling, and click/link handling.
+
+2. Updated `Dashboard` to use `CTACard`, removing duplicate styles and simplifying code.
+
+---

@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { PiUsers } from "react-icons/pi";
 import { RiMoneyCnyCircleLine } from "react-icons/ri";
 import { AiOutlineProfile } from "react-icons/ai";
-import { Link } from 'react-router-dom';
 import InvitationCard from '../components/dashboard/InvitationCard';
 import { useAuth } from '../auth/AuthContext';
 import { createSharedAccountApi } from '../api/sharedAccountApi'
@@ -10,6 +9,7 @@ import PieChart from '../components/dashboard/PieChart';
 import { FadeLoader } from 'react-spinners';
 import { useSharedAccountData } from '../hooks/useSharedAccountData'
 import { useTransactionsData } from '../hooks/useTransactionsData'
+import CTACard from '../components/dashboard/CTACard';
 
 const Dashboard: React.FC = () => {
   const { session, apiRequest } = useAuth()
@@ -95,33 +95,31 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className='flex p-6 gap-4 items-center justify-center'>
-            {/* Prompt to add an expense */}
-            <Link to='/transactions'>
-              <div className='flex-1 flex flex-col justify-center items-center gap-2 w-xs h-64 shadow-sm bg-white p-6 text-center hover:cursor-pointer hover:scale-105 hover:shadow-lg transition-transform duration-300'>
-                <RiMoneyCnyCircleLine fontSize={50} color={'#10B981'}/>
-                <h1 className='text-emerald-500 text-xl'>Add an expense</h1>
-                <p className='text-gray-400 text-sm'>Add your first expense to get a sense of how things work.</p>
-              </div>
-            </Link>
+            <CTACard
+              icon={<RiMoneyCnyCircleLine fontSize={50} color={'#10B981'}/>}
+              title="Add an expense"
+              description="Add your first expense to get a sense of how things work."
+              linkTo="/transactions"
+            />
 
-            {/* Prompt to create a shared account */}
-            {!isInvitedByPartner && 
-              <div className='flex-1 flex flex-col justify-center items-center gap-2 w-xs h-64 shadow-sm bg-emerald-400 p-6 text-center hover:cursor-pointer hover:scale-105 hover:shadow-lg transition-transform duration-300'
-                onClick={openModal}>
-                <PiUsers fontSize={50} color={'white'}/>
-                <h1 className='text-white text-xl'>Track shared expenses</h1>
-                <p className='text-white text-sm'>Invite your partner to set up a shared account.</p>
-              </div>
-            }
+            {!isInvitedByPartner && (
+              <CTACard
+                icon={<PiUsers fontSize={50} color={'white'}/>}
+                title="Track shared expenses"
+                description="Invite your partner to set up a shared account."
+                onClick={openModal}
+                bgColor="bg-emerald-400"
+                textColor="text-white"
+                iconColor="white"
+              />
+            )}
 
-            {/* Prompt to set up user profile */}
-            <Link to='/settings'>
-              <div className='flex-1 flex flex-col justify-center items-center gap-2 w-xs h-64 shadow-sm bg-white p-6 text-center hover:cursor-pointer hover:scale-105 hover:shadow-lg transition-transform duration-300'>
-                <AiOutlineProfile fontSize={50} color={'#10B981'}/>
-                <h1 className='text-emerald-500 text-xl'>Set up your profile</h1>
-                <p className='text-gray-400 text-sm'>Personalize with a photo and preferences.</p>
-              </div>  
-            </Link>
+            <CTACard
+              icon={<AiOutlineProfile fontSize={50} color={'#10B981'}/>}
+              title="Set up your profile"
+              description="Personalize with a photo and preferences."
+              linkTo="/settings"
+            />
           </div>
         </>
       )}
