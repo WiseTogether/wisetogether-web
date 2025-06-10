@@ -138,3 +138,39 @@ This document outlines the reasoning and technical approach behind selected chan
 
 ---
 
+## Feature: Google OAuth login flow
+
+**Issue:** [#9](https://github.com/WiseTogether/wisetogether-web/issues/9)
+
+### Problem
+- Google OAuth button exists in the UI but doesn’t perform any logic or redirect to Supabase OAuth.
+
+### Implementation
+1. AuthContext.tsx
+   - Added `signInWithGoogle` method with support for custom `redirectTo` URLs
+   - Introduced `extractUserProfile` helper to derive user metadata from Supabase session
+   - Updated `signUp` to save name in Supabase's `user_metadata`
+   - Session now uses metadata directly, eliminating separate profile creation
+
+2. Login & Register Components
+   - Added Google sign-in buttons that initiate OAuth flow
+   - Implemented `handleGoogleSignIn` in `Register` with invitation code handling
+   - Used `signInWithGoogle` with custom redirect including the invite code when available
+
+3. AuthCallback.tsx
+   - Created to handle Supabase OAuth redirect
+   Extracts invitation code from URL and joins user to shared account if applicable
+   Provides fallback behavior and error resilience (e.g., continues to home even on failure)
+
+4. Routing
+   - Added `/auth/callback` route to handle OAuth redirection
+
+5. Shared Account Flow
+   - Improved flow by deferring shared account joining until session is available
+   - Removed premature API calls that relied on missing access token
+   - Handles joining with both email/password and Google OAuth flows
+
+### Notes
+- Custom profile creation is replaced with Supabase's `user_metadata` for simplicity
+
+---

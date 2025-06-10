@@ -7,6 +7,7 @@ import Transactions from './pages/Transactions';
 import Settings from './components/Settings';
 import Register from './auth/Register';
 import Login from './auth/Login';
+import AuthCallback from './auth/AuthCallback';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { useAuth, UserProfile } from './auth/AuthContext';
 import { useEffect } from 'react';
@@ -112,6 +113,7 @@ function App() {
         <Routes>
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />
+          <Route path='/auth/callback' element={<AuthCallback />} />
           <Route path='/invite' element={<Register />} />
           <Route path='/' element={<Layout />}>
             <Route index element={<ProtectedRoute><Dashboard invitationLink={invitationLink} setInvitationLink={setInvitationLink} isInvitedByPartner={isInvitedByPartner} allTransactions={allTransactions}/></ProtectedRoute>} /> {/* Default route */}

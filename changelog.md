@@ -6,8 +6,8 @@ All notable changes to the WiseTogether project are documented here.
 
 ## [Unreleased]
 
-### Changed
-- Form Validation with Zod [#6](https://github.com/WiseTogether/wisetogether-web/issues/6)
+### Added
+- Google OAuth login flow [#9](https://github.com/WiseTogether/wisetogether-web/issues/9)
 
 ---
 
@@ -35,3 +35,6 @@ All notable changes to the WiseTogether project are documented here.
 ### Added
 - Fixed incorrect label assignment for newly created transactions [#7](https://github.com/WiseTogether/wisetogether-web/issues/7) ([#23](https://github.com/WiseTogether/wisetogether-web/pull/23))
 - Added fallback handling for cases where partner is undefined [#8](https://github.com/WiseTogether/wisetogether-web/issues/8) ([#23](https://github.com/WiseTogether/wisetogether-web/pull/23))
+
+### Changed
+- Form Validation with Zod [#6](https://github.com/WiseTogether/wisetogether-web/issues/6) ([#24](https://github.com/WiseTogether/wisetogether-web/pull/24))
