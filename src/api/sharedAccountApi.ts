@@ -1,5 +1,5 @@
 import type { ApiConfig } from '../lib/baseApiClient'
-import type { sharedAccount } from '../App'
+import type { SharedAccount } from '../types/auth'
 
 export function createSharedAccountApi(apiRequest: <T>(config: ApiConfig) => Promise<T>) {
   return {
@@ -11,8 +11,8 @@ export function createSharedAccountApi(apiRequest: <T>(config: ApiConfig) => Pro
       })
     },
 
-    findSharedAccountByUserId: async (userId: string): Promise<sharedAccount> => {
-      return apiRequest<sharedAccount>({
+    findSharedAccountByUserId: async (userId: string): Promise<SharedAccount> => {
+      return apiRequest<SharedAccount>({
         method: 'GET',
         url: `/shared-accounts/${userId}`,
       })

@@ -7,8 +7,7 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Changed
-- Refactored data fetching and state management [#15](https://github.com/WiseTogether/wisetogether-web/issues/15)
-- Memoized expense breakdown calculation and filtered transactions [#18](https://github.com/WiseTogether/wisetogether-web/issues/18) 
+- Extract CTA cards from Dashboard into a reusable component [#17](https://github.com/WiseTogether/wisetogether-web/issues/17)
 
 ---
 
@@ -53,3 +52,11 @@ All notable changes to the WiseTogether project are documented here.
 
 ### Changed
 - Used toast notifications for all key user actions [#14](https://github.com/WiseTogether/wisetogether-web/issues/14) ([#28](https://github.com/WiseTogether/wisetogether-web/pull/28))
+
+---
+
+## [2025-06-11]
+
+### Changed
+- Refactored data fetching and state management [#15](https://github.com/WiseTogether/wisetogether-web/issues/15) ([#29](https://github.com/WiseTogether/wisetogether-web/pull/29))
+- Memoized expense breakdown calculation and filtered transactions [#18](https://github.com/WiseTogether/wisetogether-web/issues/18) ([#29](https://github.com/WiseTogether/wisetogether-web/pull/29))
