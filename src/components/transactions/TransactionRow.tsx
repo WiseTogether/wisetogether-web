@@ -12,7 +12,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
     showSplitDetails = false,
     showUserAvatar = false
 }) => {
-    const { user } = useAuth();
+    const { userProfile } = useAuth();
 
     const handleDelete = () => {
         if (window.confirm('Are you sure you want to delete this transaction?')) {
@@ -36,7 +36,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
             {showUserAvatar && (
                 <td className='p-2 text-center'>
                     <img 
-                        src={transaction.userId === session?.user.id ? user?.avatarUrl : partnerProfile?.avatarUrl} 
+                        src={transaction.userId === session?.user.id ? userProfile?.avatarUrl : partnerProfile?.avatarUrl} 
                         className='h-10 w-10 rounded-full'
                         alt="User avatar"
                     />

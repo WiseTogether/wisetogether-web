@@ -267,3 +267,31 @@ This document outlines the reasoning and technical approach behind selected chan
 - The `baseApiClient` continues to handle API error parsing and formatting behind the scenes
 
 ---
+
+## Refactor: Data Fetching and State Management
+
+**Issue:** [#15](https://github.com/WiseTogether/wisetogether-web/issues/15), [#18](https://github.com/WiseTogether/wisetogether-web/issues/18) 
+
+### Problem
+- Global data was fetched in `App.tsx` and passed down via props
+- Inefficient calculations on every render
+
+### Implementation
+1. Custom Hooks Refactoring
+   - Created `useSharedAccountData` hook: manages shared account, partner profile, invitations, loading, and refresh
+   - Created `useTransactionsData` hook: centralized transaction filtering and breakdown calculations using useMemo
+
+2. Component Updates
+   - `Dashboard.tsx`: removed filtering logic, optimized breakdowns, simplified state and loading.
+   - `Transactions.tsx`: uses filtered data from hook, removed local filtering.
+
+3. Performance Optimizations
+   - Added `useMemo` for expensive calculations
+   - Reduced state updates and re-renders
+   - Centralized data fetching and filtering
+
+### Notes
+- Better separation of concerns between data fetching and UI
+- Improved performance and maintainability
+
+---

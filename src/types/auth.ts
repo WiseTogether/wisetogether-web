@@ -27,4 +27,21 @@ export const registerFormSchema = z.object({
 });
 
 export type LoginFormData = z.infer<typeof loginFormSchema>;
-export type RegisterFormData = z.infer<typeof registerFormSchema>; 
+export type RegisterFormData = z.infer<typeof registerFormSchema>;
+
+export interface UserProfile {
+  name: string
+  avatarUrl: string
+}
+
+export interface PartnerDetails {
+  name: string
+  avatar: string
+}
+
+export interface SharedAccount {
+  uuid: string
+  user1Id: string
+  user2Id?: string
+  uniqueCode?: string
+} 
