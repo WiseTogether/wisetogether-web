@@ -3,17 +3,18 @@ import { PiUsers } from "react-icons/pi";
 import { RiMoneyCnyCircleLine } from "react-icons/ri";
 import { AiOutlineProfile } from "react-icons/ai";
 import { Link } from 'react-router-dom';
-import InvitationCard from './InvitationCard';
+import InvitationCard from '../components/InvitationCard';
 import { useAuth } from '../auth/AuthContext';
 import { createSharedAccountApi } from '../api/sharedAccountApi'
-import { transaction } from '../App';
-import PieChart from './PieChart';
+import { Transaction } from '../types/transaction'
+import PieChart from '../components/PieChart';
+import { FadeLoader } from 'react-spinners';
 
 interface DashboardProps {
   invitationLink: string;
   setInvitationLink: React.Dispatch<React.SetStateAction<string>>;
   isInvitedByPartner: boolean;
-  allTransactions: transaction[];
+  allTransactions: Transaction[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink, isInvitedByPartner, allTransactions }) => {
@@ -21,6 +22,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [expenseByType, setExpenseByType] = useState<number[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
+  const [isCalculating, setIsCalculating] = useState<boolean>(true);
 
   const { session } = useAuth();
   const { apiRequest } = useAuth()
@@ -28,14 +30,18 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
 
   // Effect to calculate personal and shared expenses based on all transactions
   useEffect(() => {
-    const personalTransactions = allTransactions.filter(transaction => !transaction.sharedAccountId);
-    const sharedTransactions = allTransactions.filter(transaction => transaction.sharedAccountId);
+    setIsCalculating(true)
+    try {
+      const personalTransactions = allTransactions.filter(transaction => !transaction.sharedAccountId);
+      const sharedTransactions = allTransactions.filter(transaction => transaction.sharedAccountId);
 
-    const personalTotal = personalTransactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
-    const sharedTotal = sharedTransactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
+      const personalTotal = personalTransactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
+      const sharedTotal = sharedTransactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-    setExpenseByType([personalTotal, sharedTotal])
-
+      setExpenseByType([personalTotal, sharedTotal])
+    } finally {
+      setIsCalculating(false)
+    }
   }, [allTransactions])
 
   // Open modal to invite partner and create shared account if necessary
@@ -87,6 +93,14 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
 
   // Data for pie charts
   const expensesByCategoryData = calculateExpenseBreakdown();
+
+  if (isCalculating) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <FadeLoader />
+      </div>
+    )
+  }
 
   return (
     <div className='flex flex-col p-6 gap-4 items-center justify-center'>

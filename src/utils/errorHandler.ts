@@ -55,7 +55,7 @@ export function showSuccessMessage(message: string) {
 // Helper function for info messages
 export function showInfoMessage(message: string) {
     toast.info(message, {
-        position: "bottom-right",
+        position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,

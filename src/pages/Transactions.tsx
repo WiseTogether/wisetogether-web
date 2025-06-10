@@ -6,6 +6,7 @@ import { useAuth, UserProfile } from '../auth/AuthContext';
 import TransactionModal from '../components/transactions/TransactionModal';
 import TransactionList from '../components/transactions/TransactionList';
 import { createTransactionsApi } from '../api/transactionsApi';
+import { FadeLoader } from 'react-spinners';
 
 interface TransactionsProps {
     allTransactions: Transaction[];
@@ -20,13 +21,19 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
     const [modalMode, setModalMode] = useState<{ type: 'add' | 'edit', transaction?: Transaction } | null>(null);
     const [expenseType, setExpenseType] = useState<string>('personal');
     const [activeTab, setActiveTab] = useState<string>('all');
+    const [isProcessing, setIsProcessing] = useState<boolean>(true);
 
     const { session, apiRequest } = useAuth();
     const transactionsApi = createTransactionsApi(apiRequest);
 
     useEffect(() => {
-        setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
-        setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
+        setIsProcessing(true);
+        try {
+            setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
+            setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
+        } finally {
+            setIsProcessing(false);
+        }
     }, [allTransactions]);
 
     const handleAddTransaction = () => {
@@ -65,6 +72,14 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
             alert('Failed to delete transaction. Please try again.');
         }
     };
+
+    if (isProcessing) {
+        return (
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                <FadeLoader />
+            </div>
+        );
+    }
 
     return (
         <div className='w-full p-6'>
