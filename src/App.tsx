@@ -9,6 +9,7 @@ import Register from './auth/Register';
 import Login from './auth/Login';
 import AuthCallback from './auth/AuthCallback';
 import ProtectedRoute from './auth/ProtectedRoute';
+import RouteErrorBoundary from './components/error/RouteErrorBoundary';
 import { useAuth, UserProfile } from './auth/AuthContext';
 import { useEffect } from 'react';
 import { createTransactionsApi } from './api/transactionsApi'
@@ -21,6 +22,11 @@ export interface sharedAccount {
   user1Id: string,
   user2Id?: string,
   uniqueCode?: string,
+}
+
+interface PartnerDetails {
+    name: string;
+    avatar: string;
 }
 
 // Helper to format date as yyyy-MM-dd
@@ -72,14 +78,14 @@ function App() {
               try {
                 const user = sharedAccount.user1Id === session.user.id ? 'user1' : 'user2'
                 if (user === 'user1') {
-                  const partnerDetails = await userApi.getUserProfile(sharedAccount.user2Id);
+                  const partnerDetails = await userApi.getUserProfile(sharedAccount.user2Id) as PartnerDetails;
                   setPartnerProfile({
                     name: partnerDetails.name.split(' ')[0],
                     avatarUrl: partnerDetails.avatar
                   });
                 } else {
                   try {
-                    const partnerDetails = await userApi.getUserProfile(sharedAccount.user1Id);
+                    const partnerDetails = await userApi.getUserProfile(sharedAccount.user1Id) as PartnerDetails;
                     setPartnerProfile({
                       name: partnerDetails.name.split(' ')[0],
                       avatarUrl: partnerDetails.avatar
@@ -111,25 +117,68 @@ function App() {
   return (
       <div className='h-full'>
         <Routes>
-          <Route path='/register' element={<Register />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/auth/callback' element={<AuthCallback />} />
-          <Route path='/invite' element={<Register />} />
-          <Route path='/' element={<Layout />}>
-            <Route index element={<ProtectedRoute><Dashboard invitationLink={invitationLink} setInvitationLink={setInvitationLink} isInvitedByPartner={isInvitedByPartner} allTransactions={allTransactions}/></ProtectedRoute>} /> {/* Default route */}
-            <Route path="transactions" element={
+          <Route path='/register' element={
+            <RouteErrorBoundary>
+              <Register />
+            </RouteErrorBoundary>
+          } />
+          <Route path='/login' element={
+            <RouteErrorBoundary>
+              <Login />
+            </RouteErrorBoundary>
+          } />
+          <Route path='/auth/callback' element={
+            <RouteErrorBoundary>
+              <AuthCallback />
+            </RouteErrorBoundary>
+          } />
+          <Route path='/invite' element={
+            <RouteErrorBoundary>
+              <Register />
+            </RouteErrorBoundary>
+          } />
+          <Route path='/' element={
+            <RouteErrorBoundary>
+              <Layout />
+            </RouteErrorBoundary>
+          }>
+            <Route index element={
+              <RouteErrorBoundary>
                 <ProtectedRoute>
-                    <Transactions 
-                        allTransactions={allTransactions} 
-                        setAllTransactions={(transactions: Transaction[]) => setAllTransactions(transactions)} 
-                        sharedAccountDetails={sharedAccountDetails} 
-                        partnerProfile={partnerProfile}
-                    />
+                  <Dashboard 
+                    invitationLink={invitationLink} 
+                    setInvitationLink={setInvitationLink} 
+                    isInvitedByPartner={isInvitedByPartner} 
+                    allTransactions={allTransactions}
+                  />
                 </ProtectedRoute>
+              </RouteErrorBoundary>
             } />
-            <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="transactions" element={
+              <RouteErrorBoundary>
+                <ProtectedRoute>
+                  <Transactions 
+                    allTransactions={allTransactions} 
+                    setAllTransactions={(transactions: Transaction[]) => setAllTransactions(transactions)} 
+                    sharedAccountDetails={sharedAccountDetails} 
+                    partnerProfile={partnerProfile}
+                  />
+                </ProtectedRoute>
+              </RouteErrorBoundary>
+            } />
+            <Route path="settings" element={
+              <RouteErrorBoundary>
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              </RouteErrorBoundary>
+            } />
           </Route>
-          <Route path="*" element={<Register />} />
+          <Route path="*" element={
+            <RouteErrorBoundary>
+              <Register />
+            </RouteErrorBoundary>
+          } />
         </Routes>
       </div>
   )
