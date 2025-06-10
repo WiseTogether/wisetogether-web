@@ -3,7 +3,7 @@ import { PiUsers } from "react-icons/pi";
 import { RiMoneyCnyCircleLine } from "react-icons/ri";
 import { AiOutlineProfile } from "react-icons/ai";
 import { Link } from 'react-router-dom';
-import InvitationCard from '../components/InvitationCard';
+import InvitationCard from '../components/dashboard/InvitationCard';
 import { useAuth } from '../auth/AuthContext';
 import { createSharedAccountApi } from '../api/sharedAccountApi'
 import { Transaction } from '../types/transaction'

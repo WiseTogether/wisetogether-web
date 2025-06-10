@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { createTransactionsApi } from '../../api/transactionsApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { showErrorToast } from '../../utils/toastNotifications';
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
     mode,
@@ -97,7 +98,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
     const onSubmit = async (data: TransactionFormData) => {
         if (!session?.user?.id) {
-            setError('User session not found');
+            showErrorToast('User session not found');
             return;
         }
 
@@ -143,8 +144,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 }
             }
         } catch (error) {
-            console.error('Error saving transaction:', error);
-            setError('Failed to save transaction. Please try again.');
+            showErrorToast('Failed to save transaction');
         } finally {
             setIsLoading(false);
         }

@@ -1,5 +1,6 @@
 import { IoClose } from "react-icons/io5";
 import { PiCopySimpleLight } from "react-icons/pi";
+import { showSuccessToast, showErrorToast } from '../../utils/toastNotifications';
 
 
 interface InvitationCardProps {
@@ -12,9 +13,9 @@ const InvitationCard: React.FC<InvitationCardProps> = ({ setIsModalOpen, invitat
     // Function to copy the invitation link to clipboard
     const copyToClipboard = () => {
         navigator.clipboard.writeText(invitationLink).then(() => {
-          alert('Invitation link copied to clipboard!'); // Alert the user when the link is copied successfully
-        }).catch((error) => {
-          console.error('Failed to copy text: ', error);
+            showSuccessToast('Invitation link copied to clipboard!');
+        }).catch(() => {
+            showErrorToast('Failed to copy invitation link');
         });
     };
 

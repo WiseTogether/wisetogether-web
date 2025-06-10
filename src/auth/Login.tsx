@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { loginFormSchema, LoginFormData } from '../types/auth';
-import { handleApiError, showSuccessMessage } from '../utils/errorHandler';
+import { showErrorToast, showSuccessToast } from '../utils/toastNotifications';
 
 const Login = () => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -28,13 +28,13 @@ const Login = () => {
         try {
             const result = await signIn(data.email, data.password);
             if (result.success) {
-                showSuccessMessage('Successfully signed in!');
+                showSuccessToast('Successfully signed in!');
                 navigate('/');
             } else {
-                handleApiError(new Error('Invalid email or password'));
+                showErrorToast('Invalid email or password');
             }
         } catch (error) {
-            handleApiError(error, 'An unexpected error occurred during sign-in');
+            showErrorToast('An unexpected error occurred during sign-in');
         } finally {
             setLoading(false);
         }
@@ -47,11 +47,11 @@ const Login = () => {
         try {
             const result = await signInWithGoogle();
             if (!result.success) {
-                handleApiError(new Error('Failed to sign in with Google'));
+                showErrorToast('Failed to sign in with Google');
             }
             // Note: We don't navigate here as the OAuth flow will handle the redirect
         } catch (error) {
-            handleApiError(error, 'An unexpected error occurred during Google sign-in');
+            showErrorToast('An unexpected error occurred during Google sign-in');
         } finally {
             setLoading(false);
         }

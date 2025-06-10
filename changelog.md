@@ -6,8 +6,8 @@ All notable changes to the WiseTogether project are documented here.
 
 ## [Unreleased]
 
-### Fixed
-- Improved the loading state handling and prevented premature UI rendering [#13](https://github.com/WiseTogether/wisetogether-web/issues/13)
+### Changed
+- Used toast notifications for all key user actions [#14](https://github.com/WiseTogether/wisetogether-web/issues/14)
 
 ---
 
@@ -46,3 +46,6 @@ All notable changes to the WiseTogether project are documented here.
 ### Added
 - Google OAuth login flow [#9](https://github.com/WiseTogether/wisetogether-web/issues/9) ([#25](https://github.com/WiseTogether/wisetogether-web/pull/25))
 - Global error handling for render failures and API errors [#12](https://github.com/WiseTogether/wisetogether-web/issues/12) ([#26](https://github.com/WiseTogether/wisetogether-web/pull/26))
+
+### Fixed
+- Improved the loading state handling and prevented premature UI rendering [#13](https://github.com/WiseTogether/wisetogether-web/issues/13)
