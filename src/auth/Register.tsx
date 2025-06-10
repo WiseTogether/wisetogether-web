@@ -1,22 +1,65 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from './AuthContext';
-import { createUserApi } from '../api/userApi';
 import { createSharedAccountApi } from '../api/sharedAccountApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { registerFormSchema, RegisterFormData } from '../types/auth';
 
-
 function Register() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
+    const [pendingSharedAccountCode, setPendingSharedAccountCode] = useState<string | null>(null);
 
-    const { signUp, apiRequest } = useAuth();
+    const { signUp, apiRequest, session, signInWithGoogle } = useAuth();
     const navigate = useNavigate();
-    const userApi = createUserApi(apiRequest);
     const sharedAccountApi = createSharedAccountApi(apiRequest);
+
+    // Handle adding user to shared account once session is available
+    useEffect(() => {
+        const handleSharedAccount = async () => {
+            if (session?.user && pendingSharedAccountCode) {
+                try {
+                    console.log('Adding user to shared account');
+                    await sharedAccountApi.addUserToSharedAccount(session.user.id, pendingSharedAccountCode);
+                    setPendingSharedAccountCode(null);
+                    navigate('/');
+                } catch (error) {
+                    console.error('Error adding user to shared account:', error);
+                    setError('Failed to join shared account. Please try again.');
+                }
+            }
+        };
+
+        handleSharedAccount();
+    }, [session, pendingSharedAccountCode, sharedAccountApi, navigate]);
+
+    // Handle Google Sign-In
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        setError('');
+
+        const params = new URLSearchParams(document.location.search);
+        const uniqueCode = params.get('code');
+
+        try {
+            // If there's an invitation code, include it in the redirect URL
+            const redirectTo = uniqueCode 
+                ? `${window.location.origin}/auth/callback?code=${uniqueCode}`
+                : `${window.location.origin}/auth/callback`;
+
+            const result = await signInWithGoogle(redirectTo);
+            if (!result.success) {
+                setError('Failed to sign in with Google. Please try again.');
+            }
+        } catch (error) {
+            console.error('An error occurred during Google sign-in: ', error);
+            setError('An unexpected error occurred.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
         resolver: zodResolver(registerFormSchema),
@@ -36,18 +79,15 @@ function Register() {
         const uniqueCode = params.get('code');
 
         try {
-            const result = await signUp(data.email, data.password);
+            const result = await signUp(data.email, data.password, data.name);
 
             if (result.success && result.data?.user) {
-                // Create user profile
-                await userApi.createUserProfile(result.data.user.id, data.name);
-                
-                // Handle shared account if code exists
                 if (uniqueCode) {
-                    await sharedAccountApi.addUserToSharedAccount(result.data.user.id, uniqueCode);
+                    // Store the code and wait for session to be available
+                    setPendingSharedAccountCode(uniqueCode);
+                } else {
+                    navigate('/');
                 }
-
-                navigate('/');
             } else {
                 setError('Failed to create account. Please try again.');
                 console.error('Sign-up failed:', result);
@@ -68,9 +108,10 @@ function Register() {
             <div className='w-2/3 flex justify-center items-center p-6'>
                 <button 
                     type='button' 
-                    className='flex items-center justify-center gap-4 w-3/4 py-2 px-4 rounded-md border-emerald-500 border-1 text-stone-500 hover:cursor-pointer'
+                    onClick={handleGoogleSignIn}
+                    className='flex items-center justify-center gap-4 w-3/4 py-2 px-4 rounded-md border-emerald-500 border-1 text-stone-500 hover:bg-gray-50 transition-colors duration-200'
                     disabled={loading}>
-                    <FcGoogle />Sign up with Google
+                    <FcGoogle className="text-xl" />Sign up with Google
                 </button>
             </div>
 
@@ -160,4 +201,4 @@ function Register() {
     )
 }
 
-export default Register
+export default Register;

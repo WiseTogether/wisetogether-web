@@ -7,8 +7,9 @@ export interface AuthContextType {
     session: Session | null;
     user: UserProfile | null;
     isLoading: boolean;
-    signUp: (email:string, password:string) => Promise<SupabaseResponse>;
+    signUp: (email:string, password:string, name: string) => Promise<SupabaseResponse>;
     signIn: (email:string, password:string) => Promise<SupabaseResponse>;
+    signInWithGoogle: (redirectTo?: string) => Promise<SupabaseResponse>;
     signOut: () => Promise<SupabaseResponse>;
     apiRequest: <T>(config: ApiConfig) => Promise<T>;
 }
@@ -20,8 +21,8 @@ interface SupabaseResponse {
 }
 
 export interface UserProfile {
-    name: string,
-    avatarUrl?: string,
+    name: string;
+    avatarUrl?: string;
 }
 
 // Create the AuthContext with an initial undefined value
@@ -45,65 +46,52 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
         return baseApiClient<T>({ ...config, accessToken: session.access_token });
     };
 
+    // Helper function to extract user profile from session
+    const extractUserProfile = (session: Session | null): UserProfile | null => {
+        if (!session?.user) return null;
+
+        const metadata = session.user.user_metadata;
+        const fullName = metadata?.full_name || metadata?.name || 'User';
+        const displayName = fullName.split(' ')[0]; // Get first name
+
+        return {
+            name: displayName,
+            avatarUrl: metadata?.avatar_url || metadata?.picture
+        };
+    };
+
     useEffect(() => {
         // Function to load the session and user profile
         const loadSession = async () => {
-
             // Retrieve session data from Supabase
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
-
-            // Fetch user profile
-            if (session && session.user) {
-                const userProfile = await apiRequest({
-                    method: 'GET',
-                    url: `/profiles/${session.user.id}`,
-                });
-                const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' ')); // Get the first name
-
-                setUser({
-                    name: displayName,
-                    avatarUrl: userProfile.avatar
-                });
-            }
-
+            setUser(extractUserProfile(session));
             setIsLoading(false);
         };
     
         loadSession();
 
-        // Listen for authentication state changes (when user logs in or logs out)
+        // Listen for authentication state changes
         const { data: { subscription }} = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session); // Update session state when auth state changes
-            
-            // If session is valid, fetch and set user profile data
-            if (session && session.user) {
-                apiRequest({
-                    method: 'GET',
-                    url: `/profiles/${session.user.id}`,
-                }).then(userProfile => {
-                    const displayName = userProfile.name.substring(0, userProfile.name.indexOf(' '));
-                    setUser({
-                        name: displayName,
-                        avatarUrl: userProfile.avatar
-                    });
-                });
-            } else {
-                // Clear user data from state when logged out
-                setUser(null);
-            }
+            setSession(session);
+            setUser(extractUserProfile(session));
             setIsLoading(false);
         });
         
-        // Clean up the subscription when the component unmounts
         return () => subscription.unsubscribe();
-    },[])
+    }, []);
 
     // Sign up with email and password
-    const signUp = async (email:string, password:string): Promise<SupabaseResponse> => {
+    const signUp = async (email: string, password: string, name: string): Promise<SupabaseResponse> => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
+            options: {
+                data: {
+                    full_name: name,
+                }
+            }
         });
             
         if (error) {
@@ -115,7 +103,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     };
 
     // Sign in with email and password
-    const signIn = async (email:string, password:string): Promise<SupabaseResponse> => {
+    const signIn = async (email: string, password: string): Promise<SupabaseResponse> => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -140,13 +128,34 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
         return { success: true };
     };
 
+    // Sign in with Google
+    const signInWithGoogle = async (redirectTo?: string): Promise<SupabaseResponse> => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                }
+            }
+        });
+
+        if (error) {
+            console.error('There was an error signing in with Google: ', error);
+            return { success: false, error };
+        }
+
+        return { success: true };
+    };
+
     return (
-        // Provide the authentication context to the component tree
         <AuthContext.Provider value={{ 
             session, 
             signUp, 
             signOut, 
-            signIn, 
+            signIn,
+            signInWithGoogle,
             user, 
             isLoading,
             apiRequest 
@@ -163,4 +172,4 @@ export const useAuth = (): AuthContextType => {
         throw new Error('useAuth must be used within an AuthContextProvider');
     }
     return context;
-}
+};

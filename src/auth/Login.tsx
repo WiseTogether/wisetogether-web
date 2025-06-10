@@ -10,7 +10,7 @@ const Login = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
 
-    const { signIn } = useAuth();
+    const { signIn, signInWithGoogle } = useAuth();
     const navigate = useNavigate();
 
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
@@ -41,6 +41,25 @@ const Login = () => {
         }
     }
 
+    // Handle Google Sign-In
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        setError('');
+
+        try {
+            const result = await signInWithGoogle();
+            if (!result.success) {
+                setError('Failed to sign in with Google. Please try again.');
+            }
+            // Note: We don't navigate here as the OAuth flow will handle the redirect
+        } catch (error) {
+            console.error('An error occurred during Google sign-in: ', error);
+            setError('An unexpected error occurred.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className='w-full flex flex-col justify-center items-center'>
             <h1 className='text-emerald-500 text-3xl text-center m-10'>Welcome Back!</h1>
@@ -49,9 +68,10 @@ const Login = () => {
             <div className='w-2/3 flex justify-center items-center p-6'>
                 <button 
                     type='button' 
-                    className='flex items-center justify-center gap-4 w-3/4 py-2 px-4 rounded-md border-emerald-500 border-1 text-stone-500 hover:cursor-pointer'
+                    onClick={handleGoogleSignIn}
+                    className='flex items-center justify-center gap-4 w-3/4 py-2 px-4 rounded-md border-emerald-500 border-1 text-stone-500 hover:bg-gray-50 transition-colors duration-200'
                     disabled={loading}>
-                    <FcGoogle />Sign in with Google
+                    <FcGoogle className="text-xl" />Sign in with Google
                 </button>
             </div>
 
