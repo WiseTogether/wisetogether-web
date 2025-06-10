@@ -2,15 +2,16 @@ import { createContext, useState, useContext, useEffect, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { baseApiClient, type ApiConfig, ApiError } from '../lib/baseApiClient';
+import { UserProfile } from '../types/auth';
 
 export interface AuthContextType {
     session: Session | null;
-    user: UserProfile | null;
+    userProfile: UserProfile | null;
     isLoading: boolean;
     signUp: (email:string, password:string, name: string) => Promise<SupabaseResponse>;
     signIn: (email:string, password:string) => Promise<SupabaseResponse>;
     signInWithGoogle: (redirectTo?: string) => Promise<SupabaseResponse>;
-    signOut: () => Promise<SupabaseResponse>;
+    signOut: () => Promise<void>;
     apiRequest: <T>(config: ApiConfig) => Promise<T>;
 }
 
@@ -20,13 +21,8 @@ interface SupabaseResponse {
     error?: Error;
 }
 
-export interface UserProfile {
-    name: string;
-    avatarUrl?: string;
-}
-
 // Create the AuthContext with an initial undefined value
-const AuthContext = createContext<AuthContextType|undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthContextProviderProps {
     children: ReactNode;
@@ -35,7 +31,7 @@ interface AuthContextProviderProps {
 // Responsible for managing user authentication state
 export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
-    const [user, setUser] = useState<UserProfile | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     // Create the API request function that uses the current session
@@ -61,25 +57,30 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     };
 
     useEffect(() => {
-        // Function to load the session and user profile
-        const loadSession = async () => {
-            // Retrieve session data from Supabase
-            const { data: { session } } = await supabase.auth.getSession();
-            setSession(session);
-            setUser(extractUserProfile(session));
-            setIsLoading(false);
+        const initializeAuth = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                setSession(session);
+                setUserProfile(extractUserProfile(session));
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error initializing auth:', error);
+                setIsLoading(false);
+            }
         };
-    
-        loadSession();
+
+        initializeAuth();
 
         // Listen for authentication state changes
-        const { data: { subscription }} = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
-            setUser(extractUserProfile(session));
+            setUserProfile(extractUserProfile(session));
             setIsLoading(false);
         });
-        
-        return () => subscription.unsubscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Sign up with email and password
@@ -118,14 +119,14 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     };
 
     // Sign out
-    const signOut = async (): Promise<SupabaseResponse> => {
+    const signOut = async (): Promise<void> => {
         const { error } = await supabase.auth.signOut();
         if (error) {
             console.error('There was an error signing out: ', error);
-            return { success: false, error };
         }
-
-        return { success: true };
+        setSession(null);
+        setUserProfile(null);
+        setIsLoading(false);
     };
 
     // Sign in with Google
@@ -156,7 +157,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
             signOut, 
             signIn,
             signInWithGoogle,
-            user, 
+            userProfile,
             isLoading,
             apiRequest 
         }}> 

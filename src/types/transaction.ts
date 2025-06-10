@@ -1,6 +1,5 @@
-import { sharedAccount } from "@/App";
 import { Session } from '@supabase/supabase-js';
-import { UserProfile } from '../auth/AuthContext';
+import { UserProfile, SharedAccount } from '../types/auth';
 import { z } from 'zod';
 
 export interface Transaction {
@@ -33,7 +32,7 @@ export interface TransactionFormProps {
     allTransactions: Transaction[];
     expenseType: string;
     setExpenseType: (type: string) => void;
-    sharedAccountDetails: sharedAccount | null;
+    sharedAccountDetails: SharedAccount | null;
     onTransactionUpdate: (newTransaction: Transaction) => void;
 }
 
@@ -68,7 +67,7 @@ export interface TransactionModalProps {
     allTransactions: Transaction[];
     expenseType: string;
     setExpenseType: (type: string) => void;
-    sharedAccountDetails: sharedAccount | null;
+    sharedAccountDetails: SharedAccount | null;
     onTransactionUpdate: (newTransaction: Transaction) => void;
 }
 

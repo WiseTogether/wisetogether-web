@@ -7,7 +7,8 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Changed
-- Used toast notifications for all key user actions [#14](https://github.com/WiseTogether/wisetogether-web/issues/14)
+- Refactored data fetching and state management [#15](https://github.com/WiseTogether/wisetogether-web/issues/15)
+- Memoized expense breakdown calculation and filtered transactions [#18](https://github.com/WiseTogether/wisetogether-web/issues/18) 
 
 ---
 
@@ -48,4 +49,7 @@ All notable changes to the WiseTogether project are documented here.
 - Global error handling for render failures and API errors [#12](https://github.com/WiseTogether/wisetogether-web/issues/12) ([#26](https://github.com/WiseTogether/wisetogether-web/pull/26))
 
 ### Fixed
-- Improved the loading state handling and prevented premature UI rendering [#13](https://github.com/WiseTogether/wisetogether-web/issues/13)
+- Improved the loading state handling and prevented premature UI rendering [#13](https://github.com/WiseTogether/wisetogether-web/issues/13) ([#27](https://github.com/WiseTogether/wisetogether-web/pull/27))
+
+### Changed
+- Used toast notifications for all key user actions [#14](https://github.com/WiseTogether/wisetogether-web/issues/14) ([#28](https://github.com/WiseTogether/wisetogether-web/pull/28))

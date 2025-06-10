@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 function Header() {
 
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const location = useLocation();
 
   return (
@@ -14,9 +14,9 @@ function Header() {
         : location.pathname === '/settings' ? 'Settings' 
         : 'Dashboard'}
       </h2>
-      {user && <h3>Hi, {user.name}!</h3>}
+      {userProfile && <h3>Hi, {userProfile.name}!</h3>}
       <img 
-        src={user?.avatarUrl ? user.avatarUrl : userIcon} 
+        src={userProfile?.avatarUrl ? userProfile.avatarUrl : userIcon} 
         className='h-10 w-10 rounded-full'
       />
     </div>

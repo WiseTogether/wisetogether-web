@@ -1,41 +1,38 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FaPlus } from "react-icons/fa";
 import { Transaction } from '../types/transaction';
-import { sharedAccount } from '../App';
-import { useAuth, UserProfile } from '../auth/AuthContext';
+import { useAuth } from '../auth/AuthContext';
 import TransactionModal from '../components/transactions/TransactionModal';
 import TransactionList from '../components/transactions/TransactionList';
 import { createTransactionsApi } from '../api/transactionsApi';
 import { FadeLoader } from 'react-spinners';
 import { showErrorToast, showSuccessToast } from '../utils/toastNotifications';
+import { useTransactionsData } from '../hooks/useTransactionsData';
+import { useSharedAccountData } from '../hooks/useSharedAccountData';
 
-interface TransactionsProps {
-    allTransactions: Transaction[];
-    setAllTransactions: (transactions: Transaction[]) => void;
-    sharedAccountDetails: sharedAccount | null;
-    partnerProfile: UserProfile | null;
-}
-
-const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTransactions, sharedAccountDetails, partnerProfile }) => {
-    const [personalTransactions, setPersonalTransactions] = useState<Transaction[]>([]);
-    const [sharedTransactions, setSharedTransactions] = useState<Transaction[]>([]);
-    const [modalMode, setModalMode] = useState<{ type: 'add' | 'edit', transaction?: Transaction } | null>(null);
-    const [expenseType, setExpenseType] = useState<string>('personal');
-    const [activeTab, setActiveTab] = useState<string>('all');
-    const [isProcessing, setIsProcessing] = useState<boolean>(true);
-
+export function Transactions() {
     const { session, apiRequest } = useAuth();
     const transactionsApi = createTransactionsApi(apiRequest);
 
-    useEffect(() => {
-        setIsProcessing(true);
-        try {
-            setPersonalTransactions(allTransactions.filter((transaction) => !transaction.sharedAccountId));
-            setSharedTransactions(allTransactions.filter((transaction) => transaction.sharedAccountId));
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [allTransactions]);
+    // Get shared account data
+    const { 
+        sharedAccount,
+        partnerProfile,
+        isSharedAccountLoading 
+    } = useSharedAccountData();
+
+    // Get transactions data
+    const {
+        transactions,
+        personalTransactions,
+        sharedTransactions,
+        isTransactionsLoading,
+        setTransactions
+    } = useTransactionsData(sharedAccount?.uuid ?? null);
+
+    const [modalMode, setModalMode] = useState<{ type: 'add' | 'edit', transaction?: Transaction } | null>(null);
+    const [expenseType, setExpenseType] = useState<string>('personal');
+    const [activeTab, setActiveTab] = useState<string>('all');
 
     const handleAddTransaction = () => {
         setExpenseType(activeTab === 'shared' ? 'shared' : 'personal');
@@ -50,15 +47,15 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
         try {
             if (modalMode?.type === 'edit' && modalMode.transaction?.id) {
                 // For edits, update the specific transaction
-                const updatedTransactions = allTransactions.map(t => 
+                const updatedTransactions = transactions.map((t: Transaction) => 
                     t.id === modalMode.transaction!.id ? newTransaction : t
                 );
-                setAllTransactions(updatedTransactions);
+                setTransactions(updatedTransactions);
                 showSuccessToast('Transaction updated successfully');
             } else if (modalMode?.type === 'add') {
                 // For adds, prepend the new transaction
-                const updatedTransactions = [newTransaction, ...allTransactions];
-                setAllTransactions(updatedTransactions);
+                const updatedTransactions = [newTransaction, ...transactions];
+                setTransactions(updatedTransactions);
                 showSuccessToast('Transaction added successfully');
             }
             setModalMode(null);
@@ -72,15 +69,15 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
         
         try {
             await transactionsApi.deleteTransaction(transaction.id);
-            const updatedTransactions = allTransactions.filter(t => t.id !== transaction.id);
-            setAllTransactions(updatedTransactions);
+            const updatedTransactions = transactions.filter((t: Transaction) => t.id !== transaction.id);
+            setTransactions(updatedTransactions);
             showSuccessToast('Transaction deleted successfully');
         } catch (error) {
             showErrorToast('Failed to delete transaction');
         }
     };
 
-    if (isProcessing) {
+    if (isSharedAccountLoading || isTransactionsLoading) {
         return (
             <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
                 <FadeLoader />
@@ -124,7 +121,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                 {/* Conditional rendering of tables based on active tab */}
                 {activeTab === 'all' && (
                     <TransactionList
-                        transactions={allTransactions}
+                        transactions={transactions}
                         onEdit={handleEditTransaction}
                         onDelete={handleDeleteTransaction}
                         session={session}
@@ -164,7 +161,7 @@ const Transactions: React.FC<TransactionsProps> = ({ allTransactions, setAllTran
                     allTransactions={expenseType === 'personal' ? personalTransactions : sharedTransactions}
                     expenseType={expenseType}
                     setExpenseType={setExpenseType}
-                    sharedAccountDetails={sharedAccountDetails}
+                    sharedAccountDetails={sharedAccount}
                     onTransactionUpdate={handleTransactionUpdate}
                 />
             )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { PiUsers } from "react-icons/pi";
 import { RiMoneyCnyCircleLine } from "react-icons/ri";
 import { AiOutlineProfile } from "react-icons/ai";
@@ -6,97 +6,78 @@ import { Link } from 'react-router-dom';
 import InvitationCard from '../components/dashboard/InvitationCard';
 import { useAuth } from '../auth/AuthContext';
 import { createSharedAccountApi } from '../api/sharedAccountApi'
-import { Transaction } from '../types/transaction'
-import PieChart from '../components/PieChart';
+import PieChart from '../components/dashboard/PieChart';
 import { FadeLoader } from 'react-spinners';
+import { useSharedAccountData } from '../hooks/useSharedAccountData'
+import { useTransactionsData } from '../hooks/useTransactionsData'
 
-interface DashboardProps {
-  invitationLink: string;
-  setInvitationLink: React.Dispatch<React.SetStateAction<string>>;
-  isInvitedByPartner: boolean;
-  allTransactions: Transaction[];
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink, isInvitedByPartner, allTransactions }) => {
-
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [expenseByType, setExpenseByType] = useState<number[]>([]);
-  const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
-  const [isCalculating, setIsCalculating] = useState<boolean>(true);
-
-  const { session } = useAuth();
-  const { apiRequest } = useAuth()
+const Dashboard: React.FC = () => {
+  const { session, apiRequest } = useAuth()
   const sharedAccountApi = createSharedAccountApi(apiRequest)
 
-  // Effect to calculate personal and shared expenses based on all transactions
-  useEffect(() => {
-    setIsCalculating(true)
-    try {
-      const personalTransactions = allTransactions.filter(transaction => !transaction.sharedAccountId);
-      const sharedTransactions = allTransactions.filter(transaction => transaction.sharedAccountId);
+  // Get shared account data
+  const { 
+    sharedAccount,
+    invitationLink,
+    isInvitedByPartner,
+    isSharedAccountLoading,
+    refreshSharedAccount
+  } = useSharedAccountData()
 
-      const personalTotal = personalTransactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
-      const sharedTotal = sharedTransactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
+  // Get transactions data
+  const {
+    transactions,
+    personalTotal,
+    sharedTotal,
+    isTransactionsLoading
+  } = useTransactionsData(sharedAccount?.uuid ?? null)
 
-      setExpenseByType([personalTotal, sharedTotal])
-    } finally {
-      setIsCalculating(false)
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  // Memoize expense breakdown calculation
+  const { expensesByCategoryData, expenseCategories } = useMemo(() => {
+    if (!transactions.length) return { expensesByCategoryData: [], expenseCategories: [] }
+
+    const categories = ['Groceries', 'Rent', 'Utilities', 'Insurance', 'Transportation', 'Dining Out', 'Entertainment', 'Healthcare', 'Personal Care', 'Miscellaneous']
+    const breakdown = categories.map((category) => {
+      const categoryTotal = transactions
+        .filter((transaction) => transaction.category === category)
+        .reduce((sum, transaction) => sum + parseFloat(transaction.amount), 0)
+      return categoryTotal
+    })
+
+    // Filter out categories with zero total
+    const categoriesWithTotals = categories.filter((_, index) => breakdown[index] > 0)
+
+    return {
+      expensesByCategoryData: breakdown,
+      expenseCategories: categoriesWithTotals
     }
-  }, [allTransactions])
+  }, [transactions])
 
   // Open modal to invite partner and create shared account if necessary
   const openModal = async () => {
     // If no invitation link exists, create a new one
     if (!invitationLink) {
-      const uniqueCode = Math.random().toString(36).substring(2, 8);
-      const newInvitationLink = `${import.meta.env.VITE_APP_BASE_URL}/invite?code=${uniqueCode}`;
+      const uniqueCode = Math.random().toString(36).substring(2, 8)
 
-      setInvitationLink(newInvitationLink);
-
-      if (session && session.user) {
+      if (session?.user) {
         try {
           // Create a shared account for the user
-          await sharedAccountApi.createSharedAccount(session.user.id, uniqueCode);
+          await sharedAccountApi.createSharedAccount(session.user.id, uniqueCode)
+          await refreshSharedAccount() // Refresh shared account data after creation
         } catch (error) {
-          console.error('Error while creating shared account:', error);
+          console.error('Error while creating shared account:', error)
         }
       }
     }
     
-    setIsModalOpen(true);
+    setIsModalOpen(true)
   }
 
-  // Calculate expense breakdown by category
-  const calculateExpenseBreakdown = () => {
-    if (!allTransactions.length) return [];
-
-    const categories = ['Groceries', 'Rent', 'Utilities', 'Insurance', 'Transportation', 'Dining Out', 'Entertainment', 'Healthcare', 'Personal Care', 'Miscellaneous']
-    const breakdown = categories.map((category) => {
-
-        // Calculate total amount for each category
-        const categoryTotal = allTransactions
-            .filter((transaction) => transaction.category === category)
-            .reduce((sum, transaction) => sum + parseFloat(transaction.amount), 0);
-        return categoryTotal;
-    });
-
-    // Filter out categories with zero total
-    const categoriesWithTotals = categories.filter((_, index) => breakdown[index] > 0);
-
-    // Update the categories list if it's different from the current state
-    if (JSON.stringify(categoriesWithTotals) !== JSON.stringify(expenseCategories)) {
-      setExpenseCategories(categoriesWithTotals);
-    }
-
-    return breakdown;
-  };
-
-  // Data for pie charts
-  const expensesByCategoryData = calculateExpenseBreakdown();
-
-  if (isCalculating) {
+  if (isSharedAccountLoading || isTransactionsLoading) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <FadeLoader />
       </div>
     )
@@ -106,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
     <div className='flex flex-col p-6 gap-4 items-center justify-center'>
       
       {/* Displayed when there are no transactions */}
-      {allTransactions.length === 0 && (
+      {transactions.length === 0 && (
         <>
           <div className='text-center space-y-2'>
             <h1 className='text-emerald-500 text-2xl font-bold'>Welcome to WiseTogether!</h1>
@@ -157,16 +138,24 @@ const Dashboard: React.FC<DashboardProps> = ({ invitationLink, setInvitationLink
       )}
 
       {/* Displayed when there are transactions */}
-      {allTransactions.length > 0 && (
+      {transactions.length > 0 && (
         <div className='flex gap-5 w-full justify-center items-center'>
           {/* Pie charts displaying expenses */}
           <div className='flex-1 flex flex-col justify-center items-center gap-2 w-1/2 h-120 shadow-sm bg-white p-10 text-center'>
             <h2 className='flex-1 font-bold text-stone-600'>Personal vs Shared Expenses</h2>
-            <PieChart data={expenseByType} labels={['Personal', 'Shared']} title={'Personal vs Shared Expenses'} />
+            <PieChart 
+              data={[personalTotal, sharedTotal]} 
+              labels={['Personal', 'Shared']} 
+              title={'Personal vs Shared Expenses'} 
+            />
           </div>
           <div className='flex-1 flex flex-col justify-center items-center gap-2 w-1/2 h-120 shadow-sm bg-white p-10 text-center'>
             <h2 className='flex-1 font-bold text-stone-600'>Expense Category Breakdown</h2>
-            <PieChart data={expensesByCategoryData} labels={expenseCategories} title={'Expense Category Breakdown'} />
+            <PieChart 
+              data={expensesByCategoryData} 
+              labels={expenseCategories} 
+              title={'Expense Category Breakdown'} 
+            />
           </div>
         </div>
       )}
