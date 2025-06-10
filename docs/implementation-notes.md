@@ -174,3 +174,38 @@ This document outlines the reasoning and technical approach behind selected chan
 - Custom profile creation is replaced with Supabase's `user_metadata` for simplicity
 
 ---
+
+## Feature: Global error handling for render failures and API errors
+
+**Issue:** [#12](https://github.com/WiseTogether/wisetogether-web/issues/12)
+
+### Problem
+- Unhandled rendering or network errors can crash the UI or fail silently. 
+- There’s no centralized error handling for the app or for API failures.
+
+### Implementation
+1. Global Error Boundary
+   - Created `ErrorBoundary.tsx` to catch JavaScript errors in the component tree.
+   - Provides a “Refresh Page” button and supports custom fallback components via props.
+   - Wrapped the entire app in `ErrorBoundary` from `main.tsx` to catch render errors outside the router and auth context.
+
+2. Reusable Fallback UI
+   - Added `ErrorFallback.tsx` with customizable title, message, icon, and action button.
+   - Used as the default fallback in `ErrorBoundary`.
+
+3. Route-Level Error Handling
+   - Introduced `RouteErrorBoundary.tsx` for route-specific error boundaries.
+   - Uses `ErrorFallback` and includes navigation (go back, retry).
+
+4. Centralized Error Utility
+   - Created `errorHandler.ts` to standardize error and toast handling across the app.
+
+5. Login and Register Updates
+   - Replaced local error state with toast-based feedback.
+   - Added success messages and improved error detail.
+
+### Notes
+- Unexpected errors are caught and displayed using a global UI fallback.
+- API errors are handled consistently and logged or surfaced to the user via a toast.
+
+---

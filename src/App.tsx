@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { useState } from 'react'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './styles/App.css'
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -180,6 +182,18 @@ function App() {
             </RouteErrorBoundary>
           } />
         </Routes>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </div>
   )
 }

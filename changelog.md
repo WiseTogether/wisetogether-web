@@ -7,7 +7,7 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Added
-- Google OAuth login flow [#9](https://github.com/WiseTogether/wisetogether-web/issues/9)
+- Global error handling for render failures and API errors [#12](https://github.com/WiseTogether/wisetogether-web/issues/12)
 
 ---
 
@@ -38,3 +38,10 @@ All notable changes to the WiseTogether project are documented here.
 
 ### Changed
 - Form Validation with Zod [#6](https://github.com/WiseTogether/wisetogether-web/issues/6) ([#24](https://github.com/WiseTogether/wisetogether-web/pull/24))
+
+---
+
+## [2025-06-10]
+
+### Added
+- Google OAuth login flow [#9](https://github.com/WiseTogether/wisetogether-web/issues/9) ([#25](https://github.com/WiseTogether/wisetogether-web/pull/25))
