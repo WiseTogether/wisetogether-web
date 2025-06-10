@@ -5,10 +5,10 @@ import { useAuth } from './AuthContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { loginFormSchema, LoginFormData } from '../types/auth';
+import { handleApiError, showSuccessMessage } from '../utils/errorHandler';
 
 const Login = () => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
 
     const { signIn, signInWithGoogle } = useAuth();
     const navigate = useNavigate();
@@ -24,18 +24,17 @@ const Login = () => {
     // Handle form submission
     const onSubmit = async (data: LoginFormData) => {
         setLoading(true);
-        setError('');
 
         try {
             const result = await signIn(data.email, data.password);
             if (result.success) {
+                showSuccessMessage('Successfully signed in!');
                 navigate('/');
             } else {
-                setError('Incorrect email or password');
+                handleApiError(new Error('Invalid email or password'));
             }
         } catch (error) {
-            console.error('An error occurred during sign-in: ', error);
-            setError('An unexpected error occurred.');
+            handleApiError(error, 'An unexpected error occurred during sign-in');
         } finally {
             setLoading(false);
         }
@@ -44,17 +43,15 @@ const Login = () => {
     // Handle Google Sign-In
     const handleGoogleSignIn = async () => {
         setLoading(true);
-        setError('');
 
         try {
             const result = await signInWithGoogle();
             if (!result.success) {
-                setError('Failed to sign in with Google. Please try again.');
+                handleApiError(new Error('Failed to sign in with Google'));
             }
             // Note: We don't navigate here as the OAuth flow will handle the redirect
         } catch (error) {
-            console.error('An error occurred during Google sign-in: ', error);
-            setError('An unexpected error occurred.');
+            handleApiError(error, 'An unexpected error occurred during Google sign-in');
         } finally {
             setLoading(false);
         }
@@ -110,16 +107,15 @@ const Login = () => {
                             {errors.password && (
                                 <p className="text-red-500 text-xs w-full">{errors.password.message}</p>
                             )}
-                            {error && <p className="text-red-500 text-xs w-full">{error}</p>}               
                         </div>
 
                         {/* Submit Button */}
                         <div className='flex justify-center items-center w-full'>
                             <button 
                                 type='submit' 
-                                className='w-full py-2 px-4 rounded-md bg-emerald-500 text-white hover:cursor-pointer'
+                                className='w-full py-2 px-4 rounded-md text-white bg-emerald-500 hover:cursor-pointer'
                                 disabled={loading}>
-                                {loading ? 'Signing in...' : 'Sign in'}
+                                {loading ? 'Signing in...' : 'Sign In'}
                             </button>
                         </div>
                     </form>

@@ -6,10 +6,10 @@ import { createSharedAccountApi } from '../api/sharedAccountApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { registerFormSchema, RegisterFormData } from '../types/auth';
+import { handleApiError, showSuccessMessage } from '../utils/errorHandler';
 
 function Register() {
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
     const [pendingSharedAccountCode, setPendingSharedAccountCode] = useState<string | null>(null);
 
     const { signUp, apiRequest, session, signInWithGoogle } = useAuth();
@@ -21,13 +21,12 @@ function Register() {
         const handleSharedAccount = async () => {
             if (session?.user && pendingSharedAccountCode) {
                 try {
-                    console.log('Adding user to shared account');
                     await sharedAccountApi.addUserToSharedAccount(session.user.id, pendingSharedAccountCode);
                     setPendingSharedAccountCode(null);
+                    showSuccessMessage('Successfully joined shared account!');
                     navigate('/');
                 } catch (error) {
-                    console.error('Error adding user to shared account:', error);
-                    setError('Failed to join shared account. Please try again.');
+                    handleApiError(error, 'Failed to join shared account');
                 }
             }
         };
@@ -38,7 +37,6 @@ function Register() {
     // Handle Google Sign-In
     const handleGoogleSignIn = async () => {
         setLoading(true);
-        setError('');
 
         const params = new URLSearchParams(document.location.search);
         const uniqueCode = params.get('code');
@@ -51,11 +49,10 @@ function Register() {
 
             const result = await signInWithGoogle(redirectTo);
             if (!result.success) {
-                setError('Failed to sign in with Google. Please try again.');
+                handleApiError(new Error('Failed to sign in with Google'));
             }
         } catch (error) {
-            console.error('An error occurred during Google sign-in: ', error);
-            setError('An unexpected error occurred.');
+            handleApiError(error, 'An unexpected error occurred during Google sign-in');
         } finally {
             setLoading(false);
         }
@@ -73,7 +70,6 @@ function Register() {
 
     const onSubmit = async (data: RegisterFormData) => {
         setLoading(true);
-        setError('');
 
         const params = new URLSearchParams(document.location.search);
         const uniqueCode = params.get('code');
@@ -86,15 +82,14 @@ function Register() {
                     // Store the code and wait for session to be available
                     setPendingSharedAccountCode(uniqueCode);
                 } else {
+                    showSuccessMessage('Account created successfully!');
                     navigate('/');
                 }
             } else {
-                setError('Failed to create account. Please try again.');
-                console.error('Sign-up failed:', result);
+                handleApiError(new Error('Failed to create account'));
             }
         } catch (error) {
-            console.error('Registration error:', error);
-            setError('An unexpected error occurred. Please try again.');
+            handleApiError(error, 'An unexpected error occurred during registration');
         } finally {
             setLoading(false);
         }
@@ -177,10 +172,6 @@ function Register() {
                                 <p className="text-red-500 text-xs w-full">{errors.confirmPassword.message}</p>
                             )}
                         </div>
-
-                        {error && (
-                            <p className="text-red-500 text-xs text-center mb-4">{error}</p>
-                        )}
 
                         {/* Submit Button */}
                         <div className='flex justify-center items-center w-full'>
