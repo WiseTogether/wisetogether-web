@@ -7,7 +7,8 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Added
-- Implemented receipt upload and parsing functionality with loading states [#32](https://github.com/WiseTogether/wisetogether-web/issues/32)
+- Set up testing environment with Vitest
+- Added unit test for `extractUserProfile` utility
 
 ---
 
@@ -62,3 +63,10 @@ All notable changes to the WiseTogether project are documented here.
 - Memoized expense breakdown calculation and filtered transactions [#18](https://github.com/WiseTogether/wisetogether-web/issues/18) ([#29](https://github.com/WiseTogether/wisetogether-web/pull/29))
 - Extract CTA cards from Dashboard into a reusable component [#17](https://github.com/WiseTogether/wisetogether-web/issues/17) ([#30](https://github.com/WiseTogether/wisetogether-web/pull/30))
 - Extract auth utils from AuthContext and implement caching mechanisms for shared account and partner profile information [#16](https://github.com/WiseTogether/wisetogether-web/issues/16) ([#31](https://github.com/WiseTogether/wisetogether-web/pull/31))
+
+---
+
+## [2025-06-12]
+
+### Added
+- Implemented receipt upload and parsing functionality with loading states [#32](https://github.com/WiseTogether/wisetogether-web/issues/32) ([#33](https://github.com/WiseTogether/wisetogether-web/pull/33))
