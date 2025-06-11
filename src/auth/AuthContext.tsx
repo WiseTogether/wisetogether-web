@@ -1,60 +1,40 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { baseApiClient, type ApiConfig, ApiError } from '../lib/baseApiClient';
+import { type ApiConfig } from '../lib/baseApiClient';
 import { UserProfile } from '../types/auth';
+import { extractUserProfile, createApiRequest } from '../utils/authUtils';
 
-export interface AuthContextType {
+// Types
+interface AuthContextType {
     session: Session | null;
     userProfile: UserProfile | null;
     isLoading: boolean;
-    signUp: (email:string, password:string, name: string) => Promise<SupabaseResponse>;
-    signIn: (email:string, password:string) => Promise<SupabaseResponse>;
-    signInWithGoogle: (redirectTo?: string) => Promise<SupabaseResponse>;
+    signUp: (email: string, password: string, name: string) => Promise<AuthResponse>;
+    signIn: (email: string, password: string) => Promise<AuthResponse>;
+    signInWithGoogle: (redirectTo?: string) => Promise<AuthResponse>;
     signOut: () => Promise<void>;
     apiRequest: <T>(config: ApiConfig) => Promise<T>;
 }
 
-interface SupabaseResponse {
+interface AuthResponse {
     success: boolean;
     data?: { user: User | null; session: Session | null };
     error?: Error;
 }
 
-// Create the AuthContext with an initial undefined value
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 interface AuthContextProviderProps {
     children: ReactNode;
 }
+
+// Create the AuthContext with an initial undefined value
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Responsible for managing user authentication state
 export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-
-    // Create the API request function that uses the current session
-    const apiRequest = async <T,>(config: ApiConfig): Promise<T> => {
-        if (!session?.access_token) {
-            throw new ApiError('No access token available', 401);
-        }
-        return baseApiClient<T>({ ...config, accessToken: session.access_token });
-    };
-
-    // Helper function to extract user profile from session
-    const extractUserProfile = (session: Session | null): UserProfile | null => {
-        if (!session?.user) return null;
-
-        const metadata = session.user.user_metadata;
-        const fullName = metadata?.full_name || metadata?.name || 'User';
-        const displayName = fullName.split(' ')[0]; // Get first name
-
-        return {
-            name: displayName,
-            avatarUrl: metadata?.avatar_url || metadata?.picture
-        };
-    };
 
     useEffect(() => {
         const initializeAuth = async () => {
@@ -84,7 +64,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     }, []);
 
     // Sign up with email and password
-    const signUp = async (email: string, password: string, name: string): Promise<SupabaseResponse> => {
+    const signUp = async (email: string, password: string, name: string): Promise<AuthResponse> => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -104,7 +84,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     };
 
     // Sign in with email and password
-    const signIn = async (email: string, password: string): Promise<SupabaseResponse> => {
+    const signIn = async (email: string, password: string): Promise<AuthResponse> => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -130,7 +110,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     };
 
     // Sign in with Google
-    const signInWithGoogle = async (redirectTo?: string): Promise<SupabaseResponse> => {
+    const signInWithGoogle = async (redirectTo?: string): Promise<AuthResponse> => {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -150,6 +130,8 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
         return { success: true };
     };
 
+    const apiRequest = createApiRequest(session);
+
     return (
         <AuthContext.Provider value={{ 
             session, 
@@ -159,7 +141,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
             signInWithGoogle,
             userProfile,
             isLoading,
-            apiRequest 
+            apiRequest,
         }}> 
             {children}
         </AuthContext.Provider>

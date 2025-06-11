@@ -7,7 +7,7 @@ All notable changes to the WiseTogether project are documented here.
 ## [Unreleased]
 
 ### Changed
-- Extract CTA cards from Dashboard into a reusable component [#17](https://github.com/WiseTogether/wisetogether-web/issues/17)
+- Extract auth utils from AuthContext and implement caching mechanisms for shared account and partner profile information [#16](https://github.com/WiseTogether/wisetogether-web/issues/16)
 
 ---
 
@@ -60,3 +60,4 @@ All notable changes to the WiseTogether project are documented here.
 ### Changed
 - Refactored data fetching and state management [#15](https://github.com/WiseTogether/wisetogether-web/issues/15) ([#29](https://github.com/WiseTogether/wisetogether-web/pull/29))
 - Memoized expense breakdown calculation and filtered transactions [#18](https://github.com/WiseTogether/wisetogether-web/issues/18) ([#29](https://github.com/WiseTogether/wisetogether-web/pull/29))
+- Extract CTA cards from Dashboard into a reusable component [#17](https://github.com/WiseTogether/wisetogether-web/issues/17) ([#30](https://github.com/WiseTogether/wisetogether-web/pull/30))
