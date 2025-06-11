@@ -23,13 +23,19 @@ export async function baseApiClient<T>({
 }: ApiConfig & { accessToken: string }): Promise<T> {
   try {
     const baseUrl = import.meta.env.VITE_API_BASE_URL
-    const requestBody = data ? { body: JSON.stringify(data) } : {}
+    
+    // Handle FormData differently from JSON data
+    const isFormData = data instanceof FormData
+    const requestBody = data ? {
+      body: isFormData ? data : JSON.stringify(data)
+    } : {}
     
     const response = await fetch(`${baseUrl}${url}`, {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        ...(accessToken && { Authorization: `Bearer ${accessToken}` })
+        // Only set Content-Type for non-FormData requests
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
       },
       ...requestBody
     });
