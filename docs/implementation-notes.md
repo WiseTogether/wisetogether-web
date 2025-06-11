@@ -309,3 +309,28 @@ This document outlines the reasoning and technical approach behind selected chan
 2. Updated `Dashboard` to use `CTACard`, removing duplicate styles and simplifying code.
 
 ---
+
+## Refactor: Extract Auth Utils from AuthContext and Implement Caching Mechanisms
+
+**Issue:** [#16](https://github.com/WiseTogether/wisetogether-web/issues/16)
+
+### Problem
+- Auth utils are embedded in the context code, making it harder to maintain and test.
+- Each session initiates network calls to retrieve shared account and partner profile information, resulting in unnecessary latency and load on the backend.
+
+### Implementation
+1. Caching mechanism
+   - Uses `localStorage` with a 24-hour expiration
+   - Stores both data and timestamp for cache invalidation
+   - Separate cache keys for shared account and partner profile
+
+2. Created  a new `authUtils.ts` file
+   - extracted `extractUserProfile` and `createApiRequest` from AuthContext
+   - updated `AuthContext.tsx` to import utilities from the new location
+
+### Notes
+- Introducing a lightweight caching mechanism results to improved performance and reduced repeated API calls
+- Extraction of utility functions results to better code organization and separation of concerns
+
+---
+
