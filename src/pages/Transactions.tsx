@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { FaPlus } from "react-icons/fa";
+import { useState, useRef } from 'react'
+import { FaPlus, FaReceipt } from "react-icons/fa";
 import { Transaction } from '../types/transaction';
 import { useAuth } from '../auth/AuthContext';
 import TransactionModal from '../components/transactions/TransactionModal';
@@ -13,6 +13,8 @@ import { useSharedAccountData } from '../hooks/useSharedAccountData';
 export function Transactions() {
     const { session, apiRequest } = useAuth();
     const transactionsApi = createTransactionsApi(apiRequest);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
 
     // Get shared account data
     const { 
@@ -77,6 +79,72 @@ export function Transactions() {
         }
     };
 
+    const handleUploadReceipt = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showErrorToast('Please upload an image file')
+            return
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showErrorToast('File size should be less than 5MB')
+            return
+        }
+
+        setIsUploadingReceipt(true)
+        try {
+            const formData = new FormData()
+            formData.append('receipt', file)
+
+            const parsedReceipt = await apiRequest<{
+                merchant: string;
+                date: string
+                amount: number
+                category: string
+            }>({
+                method: 'POST',
+                url: '/expenses/parse-receipt',
+                data: formData
+            })
+
+            // Format the parsed data for the transaction form
+            const transaction: Transaction = {
+                userId: session?.user?.id || '',
+                date: parsedReceipt.date,
+                amount: parsedReceipt.amount.toString(),
+                category: parsedReceipt.category,
+                description: parsedReceipt.merchant, // Use merchant as description
+                splitType: 'equal', // Default to equal split for shared expenses
+                splitDetails: {
+                    user1_amount: parsedReceipt.amount / 2,
+                    user2_amount: parsedReceipt.amount / 2
+                }
+            }
+
+            // Open the transaction modal with the parsed data
+            setExpenseType('personal') // Default to personal expense
+            setModalMode({ 
+                type: 'add',
+                transaction
+            })
+
+            showSuccessToast('Receipt uploaded successfully')
+        } catch (error) {
+            console.error('Error uploading receipt:', error)
+            showErrorToast('Failed to parse receipt')
+        } finally {
+            setIsUploadingReceipt(false)
+            // Reset the file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
+        }
+    }
+
     if (isSharedAccountLoading || isTransactionsLoading) {
         return (
             <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
@@ -109,13 +177,46 @@ export function Transactions() {
                         Shared
                     </button>
 
-                    {/* Button to add a new transaction */}
-                    <button 
-                        className='ml-auto inline-flex items-center text-emerald-500 p-2 mb-2 hover:cursor-pointer hover:text-emerald-300'
-                        onClick={handleAddTransaction}
-                    >
-                        <FaPlus className='mr-2'/> Add transaction
-                    </button>
+                    {/* Action buttons */}
+                    <div className='ml-auto flex gap-2'>
+                        {/* Add Transaction button */}
+                        <button 
+                            className='inline-flex items-center text-emerald-500 p-2 mb-2 hover:cursor-pointer hover:text-emerald-300'
+                            onClick={handleAddTransaction}
+                        >
+                            <FaPlus className='mr-2'/> Add Transaction
+                        </button>
+
+                        {/* Hidden file input */}
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleUploadReceipt}
+                            accept="image/*"
+                            className="hidden"
+                            disabled={isUploadingReceipt}
+                        />
+                        
+                        {/* Upload Receipt button */}
+                        <button 
+                            className={`inline-flex items-center p-2 mb-2 rounded-md hover:cursor-pointer transition-colors
+                                ${isUploadingReceipt 
+                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                    : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                            onClick={() => !isUploadingReceipt && fileInputRef.current?.click()}
+                            disabled={isUploadingReceipt}
+                        >
+                            {isUploadingReceipt ? (
+                                <>
+                                    Parsing Receipt...
+                                </>
+                            ) : (
+                                <>
+                                    <FaReceipt className='mr-2'/> Upload Receipt
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Conditional rendering of tables based on active tab */}

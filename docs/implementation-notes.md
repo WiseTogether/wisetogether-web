@@ -334,3 +334,30 @@ This document outlines the reasoning and technical approach behind selected chan
 
 ---
 
+## Feature: Receipt Upload and Parsing
+
+**Issue:** [#32](https://github.com/WiseTogether/wisetogether-web/issues/32)
+
+### Problem
+- Users need a fast and intuitive way to input expense data from physical receipts without manually entering every field. 
+- Manual entry is time-consuming and error-prone, especially for receipts in Japanese.
+
+### Implementation
+
+1. File Upload & Validation
+   - Uses a hidden file input (`accept="image/*"`), triggered by a button.
+   - Validates file type (image/*) and file size (max 5MB).
+   - Displays errors using toast notifications.
+   - Upload button is disabled during upload/parsing.
+
+2. Parsing Flow
+   - Image is sent to the server via FormData (`POST /expenses/parse-receipt`).
+   - Server returns parsed receipt fields
+   - Data is formatted into a transaction object and passed to the form.
+   - Transaction modal opens with pre-filled fields for user confirmation.
+
+#### Notes
+- Future enhancements: receipt preview, batch uploads, stored receipt history
+
+---
+

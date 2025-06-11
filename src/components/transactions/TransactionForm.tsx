@@ -39,7 +39,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     ];
 
     useEffect(() => {
-        if (mode.type === 'edit' && mode.transaction) {
+        if (mode.transaction) {
             reset({
                 date: mode.transaction.date,
                 amount: mode.transaction.amount,
